@@ -131,7 +131,7 @@ class _GenderState extends State<Gender> {
                 child: DropdownButtonFormField<String>(
                   value: _selectedGender,
                   hint: const Text("Select your gender"),
-                  items: ["Male", "Female", "Other"].map((String gender) {
+                  items: ["Male", "Female", ].map((String gender) {
                     return DropdownMenuItem<String>(
                       value: gender,
                       child: Text(gender),
