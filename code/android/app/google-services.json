@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1061208534442",
+    "project_id": "confidentvoiceapp",
+    "storage_bucket": "confidentvoiceapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061208534442:android:8e25e125c76d291ae10fd3",
+        "android_client_info": {
+          "package_name": "com.example.hadil_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQs7EnOnVJ-iT_hLIqjjIQu7naEzBwBjQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
