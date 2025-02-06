@@ -122,30 +122,28 @@ class _BirthdayState extends State<Birthday> {
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
-                  child: Text(
-                    "Hello, ${widget.fullName}!",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                const SizedBox(height: 30),
+                Text(
+                  "Hello, ${widget.fullName}!",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
-                  child: Image.asset(
-                    'assets/images/illustrationSign.png',
-                    height: 200,
-                    fit: BoxFit.contain,
-                  ),
+                const SizedBox(height: 20),
+                Image.asset(
+                  'assets/images/illustrationSign.png',
+                  height: 160,
+                  fit: BoxFit.contain,
                 ),
+                const SizedBox(height: 20),
                 const Text(
                   "Create account",
                   style: TextStyle(
@@ -155,85 +153,33 @@ class _BirthdayState extends State<Birthday> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: 297,
-                  height: 53,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(
-                      5,
-                      (index) => Row(
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                width: 30,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: index <= 1
-                                      ? const Color(0xFF412963)
-                                      : Colors.grey.shade300,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              if (index <= 1)
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                            ],
-                          ),
-                          if (index < 4)
-                            Container(
-                              width: 36,
-                              height: 8,
-                              color: index <= 1
-                                  ? const Color(0xFF412963)
-                                  : Colors.grey.shade300,
-                            ),
-                        ],
-                      ),
+                const Text(
+                  "Date of Birth:",
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  readOnly: true,
+                  onTap: () => _selectDate(context),
+                  controller: TextEditingController(text: selectedDate),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey.shade200,
+                    hintText: "DD/MM/YYYY",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide.none,
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 14.0,
+                    ),
+                    errorText: error,
                   ),
                 ),
                 const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Date of Birth:",
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        readOnly: true,
-                        onTap: () => _selectDate(context),
-                        controller: TextEditingController(text: selectedDate),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey.shade200,
-                          hintText: "DD/MM/YYYY",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                            vertical: 14.0,
-                          ),
-                          errorText: error,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _onContinuePressed,
                     style: ElevatedButton.styleFrom(
@@ -243,67 +189,23 @@ class _BirthdayState extends State<Birthday> {
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Center(
-                      child: Text(
-                        "Continue",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
+                    child: const Text(
+                      "Continue",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Sign up with Google",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Image.asset(
-                      'assets/images/googleIcon.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 100.0),
-                  child: const Divider(
-                    color: Colors.grey,
-                    thickness: 1,
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Login()),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Have an account? ",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Login(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Log in",
-                        style: TextStyle(
-                          color: Color(0xFF412963),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                  child: const Text(
+                    "Have an account? Log in",
+                    style: TextStyle(
+                        color: Color(0xFF412963), fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 20),
               ],

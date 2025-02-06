@@ -1,16 +1,45 @@
+buildscript {
+    ext.kotlin_version = '1.7.10'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.15'
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
+    
+    // Add this configuration for all Android library modules
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                if (project.name == 'cloud_firestore') {
+                    namespace 'io.flutter.plugins.firebase.firestore'
+                } else if (project.name == 'uni_links') {
+                    namespace 'io.flutter.plugins.uni_links'
+                } else if (!project.hasProperty('android.namespace')) {
+                    namespace project.group ?: "com.example.${project.name}"
+                }
+            }
+        }
+    }
 }
 
-rootProject.buildDir = "../build"
+rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {
-    project.evaluationDependsOn(":app")
+    project.evaluationDependsOn(':app')
 }
 
 tasks.register("clean", Delete) {

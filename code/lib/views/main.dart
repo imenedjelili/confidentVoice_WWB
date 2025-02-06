@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
               themeNotifier.themeMode, 
           home: const SplashScreen(),
           routes: {
-            '/home': (context) => const HomePage(),
+            '/home': (context) => const HomePage(userName: 'defaultUser', profilePictureUrl: 'defaultUrl'),
           },
         );
       },

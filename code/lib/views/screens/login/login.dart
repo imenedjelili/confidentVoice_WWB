@@ -88,7 +88,10 @@ class _LoginState extends State<Login> {
       if (isLoginSuccessful) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => HomePage(
+            userName: 'User Name', // Replace with actual user name
+            profilePictureUrl: 'Profile Picture URL', // Replace with actual profile picture URL
+          )),
         );
       } else {
         setState(() {
@@ -226,7 +229,7 @@ class _LoginState extends State<Login> {
                       if (_errorMessage != null)
                         Text(
                           _errorMessage!,
-                          style: TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       const SizedBox(height: 20),
                       Row(
