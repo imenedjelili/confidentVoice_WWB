@@ -1,6 +1,7 @@
 import 'package:confident_voice/views/screens/splashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confident_voice/Controllers/theme_bloc.dart';
 import 'package:confident_voice/Controllers/profile_bloc.dart';
@@ -10,9 +11,9 @@ import 'package:confident_voice/views/screens/recording,Timer/timer.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
 import 'package:confident_voice/views/screens/profile/personal_information.dart';
 import 'package:confident_voice/views/screens/settings/settings.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sqflite/sqflite.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -20,6 +21,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Delete the existing database (for development only)
+  await deleteDatabase(join(await getDatabasesPath(), "ConfidentVoice.db"));
   final prefs = await SharedPreferences.getInstance();
 
   runApp(MyApp(prefs: prefs));
@@ -49,7 +52,10 @@ class MyApp extends StatelessWidget {
             initialRoute: '/',
             routes: {
               '/': (context) => const SplashScreen(),
-              '/homepage': (context) => const HomePage(),
+              '/homepage': (context) => HomePage(
+                userName: 'defaultUserName',
+                profilePictureUrl: 'defaultProfilePictureUrl',
+              ),
               '/Recording': (context) => const RecordingsPage(),
               '/Timer': (context) => const TimerPage(),
               RecordingPlayerPage.recording: (context) =>

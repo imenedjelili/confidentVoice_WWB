@@ -66,7 +66,7 @@ class BottomNavigationWidget extends StatelessWidget {
   }
 
   final List<Widget> _screens = [
-    const HomePage(),
+    const HomePage(userName: 'User Name', profilePictureUrl: 'https://example.com/profile.jpg'),
     const SpeechLibraryPage(),
     const ContributionScreen(),
     const ProfileScreen(),

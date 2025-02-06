@@ -24,7 +24,10 @@ class _GenderState extends State<Gender> {
 
     try {
       // Update user document in Firestore
-      await FirebaseFirestore.instance.collection('users').doc(widget.email).update({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.email)
+          .update({
         'gender': _selectedGender,
       });
 
@@ -32,7 +35,7 @@ class _GenderState extends State<Gender> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProfilePicture(email: widget.email, gender: '',),
+          builder: (context) => ProfilePicture(email: widget.email),
         ),
       );
     } catch (e) {
@@ -55,110 +58,64 @@ class _GenderState extends State<Gender> {
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40.0),
-                child: Image.asset(
-                  'assets/images/illustrationSign.png',
-                  height: 200,
-                  fit: BoxFit.contain,
-                ),
+              const SizedBox(height: 20),
+              Image.asset(
+                'assets/images/illustrationSign.png',
+                height: 160,
               ),
+              const SizedBox(height: 20),
               const Text(
                 "Create account",
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
-              // Progress bar
-              SizedBox(
-                width: 297,
-                height: 53,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                    5,
-                    (index) => Row(
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: index <= 2
-                                    ? const Color(0xFF412963)
-                                    : Colors.grey.shade300,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            if (index <= 2)
-                              const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                        if (index < 4)
-                          Container(
-                            width: 36,
-                            height: 8,
-                            color: index <= 2
-                                ? const Color(0xFF412963)
-                                : Colors.grey.shade300,
-                          ),
-                      ],
-                    ),
-                  ),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Select your gender:",
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Select your gender:",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                child: DropdownButtonFormField<String>(
-                  value: _selectedGender,
-                  hint: const Text("Select your gender"),
-                  items: ["Male", "Female", ].map((String gender) {
-                    return DropdownMenuItem<String>(
-                      value: gender,
-                      child: Text(gender),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedGender = newValue;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey.shade200,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 14.0,
-                    ),
+              DropdownButtonFormField<String>(
+                value: _selectedGender,
+                hint: const Text("Select your gender"),
+                items: ["Male", "Female"].map((String gender) {
+                  return DropdownMenuItem<String>(
+                    value: gender,
+                    child: Text(gender),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedGender = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey.shade200,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 14.0,
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50.0),
+              SizedBox(
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _onContinuePressed,
                   style: ElevatedButton.styleFrom(
@@ -168,15 +125,13 @@ class _GenderState extends State<Gender> {
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: const Center(
-                    child: Text(
-                      "Continue",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+                  child: const Text(
+                    "Continue",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -194,7 +149,6 @@ class _GenderState extends State<Gender> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),

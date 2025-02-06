@@ -204,7 +204,7 @@ class _ScriptsState extends State<Scripts> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => NewScript(),
+                    builder: (context) => const NewScript(),
                   ),
                 );
               },

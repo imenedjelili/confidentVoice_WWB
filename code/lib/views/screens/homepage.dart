@@ -8,19 +8,35 @@ import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final String userName;
+  final String profilePictureUrl;
+
+  const HomePage({
+    super.key,
+    required this.userName,
+    required this.profilePictureUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => HomeBloc()..add(InitializeHomeEvent()),
-      child: const _HomeView(),
+      child: _HomeView(
+        userName: userName,
+        profilePictureUrl: profilePictureUrl,
+      ),
     );
   }
 }
 
 class _HomeView extends StatefulWidget {
-  const _HomeView();
+  final String userName;
+  final String profilePictureUrl;
+
+  const _HomeView({
+    required this.userName,
+    required this.profilePictureUrl,
+  });
 
   @override
   State<_HomeView> createState() => _HomeViewState();
@@ -37,7 +53,7 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFFF6F6F6),
       body: _screens[_currentIndex],
@@ -54,11 +70,14 @@ class _HomeViewState extends State<_HomeView> {
               // Library tab
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SpeechLibraryPage()),
+                MaterialPageRoute(
+                    builder: (context) => const SpeechLibraryPage()),
               );
             } else {
               setState(() {
-                _currentIndex = index > 1 ? index - 1 : index; // Adjust index since library is handled separately
+                _currentIndex = index > 1
+                    ? index - 1
+                    : index; // Adjust index since library is handled separately
               });
             }
           },
@@ -73,14 +92,15 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
-  BottomNavigationBarItem _buildNavItem(IconData icon, String label, int index) {
-    final bool isSelected = index == _currentIndex || 
-        (index > 1 && (index - 1) == _currentIndex);
-    
+  BottomNavigationBarItem _buildNavItem(
+      IconData icon, String label, int index) {
+    final bool isSelected =
+        index == _currentIndex || (index > 1 && (index - 1) == _currentIndex);
+
     return BottomNavigationBarItem(
       icon: Icon(
         icon,
-        color: isSelected 
+        color: isSelected
             ? Theme.of(context).bottomNavigationBarTheme.selectedItemColor
             : Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
       ),
@@ -94,6 +114,9 @@ class _HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _HomeViewState homeViewState =
+        context.findAncestorStateOfType<_HomeViewState>()!;
+
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
         return Scaffold(
@@ -114,15 +137,16 @@ class _HomeContent extends StatelessWidget {
                           builder: (context) => const ProfileScreen()),
                     );
                   },
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 16,
-                    backgroundImage: AssetImage('assets/images/profile.png'),
+                    backgroundImage:
+                        NetworkImage(homeViewState.widget.profilePictureUrl),
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  "Home",
-                  style: TextStyle(
+                Text(
+                  homeViewState.widget.userName,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -141,7 +165,8 @@ class _HomeContent extends StatelessWidget {
                 IconButton(
                   icon: Stack(
                     children: [
-                      const Icon(Icons.notifications_outlined, color: Colors.black),
+                      const Icon(Icons.notifications_outlined,
+                          color: Colors.black),
                       Positioned(
                         right: 0,
                         top: 0,
@@ -199,9 +224,9 @@ class _HomeContent extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          "Welcome, dear Maroua! Have a great day!",
-                          style: TextStyle(
+                        child: Text(
+                          "Welcome, dear ${homeViewState.widget.userName}! Have a great day!",
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -297,7 +322,8 @@ class _HomeContent extends StatelessWidget {
                                         color: Colors.transparent,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color:
+                                                Colors.black.withOpacity(0.1),
                                             blurRadius: 6,
                                             spreadRadius: 2,
                                             offset: const Offset(0, 3),

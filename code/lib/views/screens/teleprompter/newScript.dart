@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'scripts.dart';
 
 class NewScript extends StatefulWidget {
-  NewScript({super.key});
+  const NewScript({super.key});
 
   @override
   _NewScriptState createState() => _NewScriptState();
