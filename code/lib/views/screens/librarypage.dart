@@ -23,19 +23,30 @@ class _SpeechLibraryView extends StatefulWidget {
 }
 
 class _SpeechLibraryViewState extends State<_SpeechLibraryView> {
+  String? selectedCategory;
   int _currentIndex = 0;
+
+  final List<Map<String, dynamic>> categories = [
+    {'label': 'For You', 'icon': Icons.star},
+    {'label': 'Marketing', 'icon': Icons.trending_up},
+    {'label': 'Art & Photos', 'icon': Icons.photo},
+    {'label': 'Science', 'icon': Icons.science},
+    {'label': 'Technology', 'icon': Icons.computer},
+    {'label': 'Health', 'icon': Icons.health_and_safety},
+    {'label': 'Travel', 'icon': Icons.travel_explore},
+    {'label': 'Music', 'icon': Icons.music_note},
+    {'label': 'Food', 'icon': Icons.fastfood},
+    {'label': 'Sports', 'icon': Icons.sports},
+    {'label': 'Movies', 'icon': Icons.movie},
+    {'label': 'Comedy', 'icon': Icons.sentiment_satisfied},
+    {'label': 'Books', 'icon': Icons.book},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Speech Library'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -48,7 +59,16 @@ class _SpeechLibraryViewState extends State<_SpeechLibraryView> {
           ),
         ],
       ),
-      body: _currentIndex == 0 ? _buildSlidesContent(context) : _buildTextContent(context),
+      body: Column(
+        children: [
+          _buildCategoryChips(),
+          Expanded(
+            child: _currentIndex == 0 
+              ? _buildSlidesContent(context) 
+              : _buildTextContent(context),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -75,6 +95,87 @@ class _SpeechLibraryViewState extends State<_SpeechLibraryView> {
             label: 'Text',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final category = categories[index];
+            return _buildCategoryChip(category['label'], category['icon']);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String label, IconData icon) {
+    bool isSelected = selectedCategory == label;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ChoiceChip(
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          selected: isSelected,
+          onSelected: (bool selected) {
+            setState(() {
+              selectedCategory = selected ? label : null;
+            });
+            // TODO: Filter content based on selected category
+          },
+          selectedColor: const Color(0xFF412963), // Dark purple for selected
+          backgroundColor: const Color(0xFF9370DB), // Medium purple for unselected
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0, // Remove default elevation since we're using custom shadow
+          pressElevation: 2,
+        ),
       ),
     );
   }

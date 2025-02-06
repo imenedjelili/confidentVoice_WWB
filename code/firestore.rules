@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /documents/{documentId} {
+      // Allow read access to all users
+      allow read: if true;
+      
+      // Allow write access to authenticated users
+      allow create, update: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['name', 'type', 'writer', 'category', 'url', 'userId', 'created_at']);
+      
+      // Allow users to delete only their own documents
+      allow delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+  }
+}
