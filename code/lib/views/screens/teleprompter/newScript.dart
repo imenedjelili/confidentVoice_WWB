@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'scripts.dart';
 
 class NewScript extends StatefulWidget {
   const NewScript({super.key});
@@ -14,22 +15,45 @@ class _NewScriptState extends State<NewScript> {
 
   String? errorMessage;
 
-  void _validateAndSubmit() {
+  void _validateAndSubmit() async {
     setState(() {
       if (topicController.text.isEmpty || descriptionController.text.isEmpty) {
         errorMessage = 'Please fill in both topic and description';
       } else {
         errorMessage = null;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Scripts(
-              newScript: descriptionController.text,
-            ),
-          ),
-        );
       }
     });
+
+    if (errorMessage == null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance.collection('scripts').add({
+            'userId': user.uid,
+            'topic': topicController.text,
+            'description': descriptionController.text,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
+          topicController.clear();
+          descriptionController.clear();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Script saved successfully!')),
+          );
+
+          Navigator.pop(context); // Go back to the Scripts screen
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User not logged in.')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving script: $e')),
+        );
+      }
+    }
   }
 
   @override

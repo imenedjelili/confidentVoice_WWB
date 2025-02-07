@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class DBHelper {
   static const _database_name = "ConfidentVoice.db";
-  static const _database_version = 2; // Incremented version
+  static const _database_version = 2; 
   static Database? database;
 
   static Future<Database> getDatabase() async {

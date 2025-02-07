@@ -4,6 +4,7 @@ import 'package:confident_voice/models/States/recordings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+
 class RecordingsPage extends StatelessWidget {
   static const String recording = '/Recording';
   const RecordingsPage({super.key});

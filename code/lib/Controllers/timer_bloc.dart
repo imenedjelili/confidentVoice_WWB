@@ -4,7 +4,6 @@ import 'package:confident_voice/models/Events/timer_event.dart';
 import 'package:confident_voice/models/States/timer_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
   Timer? _timer;
   late Duration _duration;

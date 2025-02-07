@@ -8,3 +8,7 @@ class UpdateDurationEvent extends RecorderEvent {
   final int duration;
   UpdateDurationEvent(this.duration);
 }
+
+class PauseRecordingEvent extends RecorderEvent {}
+
+class ResumeRecordingEvent extends RecorderEvent {}

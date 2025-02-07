@@ -20,19 +20,16 @@ class _BirthdayState extends State<Birthday> {
   bool isValid = false;
   String? error;
 
-  // Initialize Firebase
   @override
   void initState() {
     super.initState();
     Firebase.initializeApp();
   }
 
-  // Date picker method
   void _selectDate(BuildContext context) async {
     final DateTime now = DateTime.now();
-    final DateTime minDate = DateTime(now.year - 100); // 100 years ago
-    final DateTime maxDate =
-        DateTime(now.year - 16, now.month, now.day); // 16 years ago
+    final DateTime minDate = DateTime(now.year - 100);
+    final DateTime maxDate = DateTime(now.year - 16, now.month, now.day);
 
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -47,7 +44,6 @@ class _BirthdayState extends State<Birthday> {
     }
   }
 
-  // When a date is selected
   void _onDateSelected(DateTime date) {
     if (!_isAtLeast16YearsOld(date)) {
       setState(() {
@@ -64,16 +60,13 @@ class _BirthdayState extends State<Birthday> {
     }
   }
 
-  // Check if the user is at least 16 years old
   bool _isAtLeast16YearsOld(DateTime birthDate) {
     final today = DateTime.now();
     final difference = today.difference(birthDate);
-    final age =
-        difference.inDays / 365.25; // Using 365.25 to account for leap years
+    final age = difference.inDays / 365.25;
     return age >= 16;
   }
 
-  // On continue button press, save data and navigate
   void _onContinuePressed() async {
     if (selectedDate == null || selectedDate!.isEmpty) {
       setState(() {
@@ -86,15 +79,16 @@ class _BirthdayState extends State<Birthday> {
         isValid = false;
       });
     } else {
-      // Store user data in Firestore
       try {
-        FirebaseFirestore.instance.collection('users').doc(widget.email).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.email)
+            .set({
           'fullName': widget.fullName,
           'email': widget.email,
           'dateOfBirth': selectedDate,
         });
 
-        // Navigate to the Gender page
         Navigator.push(
           context,
           MaterialPageRoute(
