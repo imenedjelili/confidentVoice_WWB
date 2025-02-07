@@ -67,12 +67,14 @@ class Exercises extends StatelessWidget {
     },
   ];
 
-  void _navigateToExercise(BuildContext context, Map<String, dynamic> exercise) {
+  void _navigateToExercise(
+      BuildContext context, Map<String, dynamic> exercise) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => OneExercise(
           exerciseSteps: List<String>.from(exercise['steps']),
+          imagePath: '',
         ),
       ),
     );

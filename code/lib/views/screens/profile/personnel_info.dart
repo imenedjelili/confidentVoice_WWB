@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confident_voice/providers/theme_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PersonalInformation extends StatefulWidget {
-  const PersonalInformation({super.key});
+  const PersonalInformation({Key? key}) : super(key: key);
 
   @override
   State<PersonalInformation> createState() => _PersonalInformationState();
@@ -19,10 +21,36 @@ class _PersonalInformationState extends State<PersonalInformation> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: "John Doe"); // Replace with actual user data
-    _emailController = TextEditingController(text: "john.doe@example.com");
-    _phoneController = TextEditingController(text: "+1234567890");
-    _bioController = TextEditingController(text: "Voice artist and enthusiast");
+
+    // Initialize controllers.
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _bioController = TextEditingController();
+
+    // Fetch current user info from FirebaseAuth.
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _nameController.text = user.displayName ?? '';
+      _emailController.text = user.email ?? '';
+      _phoneController.text = user.phoneNumber ?? '';
+
+      // Optionally fetch extra data (like bio) from Firestore.
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .then((doc) {
+        if (doc.exists && doc.data() != null) {
+          final data = doc.data() as Map<String, dynamic>;
+          setState(() {
+            _bioController.text = data['bio'] ?? '';
+          });
+        }
+      }).catchError((error) {
+        print("Error fetching user data: $error");
+      });
+    }
   }
 
   @override
@@ -45,7 +73,8 @@ class _PersonalInformationState extends State<PersonalInformation> {
         backgroundColor: isDarkMode ? Colors.black : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDarkMode ? Colors.white : Colors.black),
+          icon: Icon(Icons.arrow_back,
+              color: isDarkMode ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -77,9 +106,10 @@ class _PersonalInformationState extends State<PersonalInformation> {
                         backgroundColor: const Color(0xFFA26DC5),
                         radius: 18,
                         child: IconButton(
-                          icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                          icon: const Icon(Icons.camera_alt,
+                              size: 18, color: Colors.white),
                           onPressed: () {
-                            // Implement image picker
+                            // Implement image picker here.
                           },
                         ),
                       ),
@@ -124,9 +154,10 @@ class _PersonalInformationState extends State<PersonalInformation> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      // Save changes logic
+                      // Save changes logic goes here.
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Changes saved successfully')),
+                        const SnackBar(
+                            content: Text('Changes saved successfully')),
                       );
                     }
                   },
@@ -165,14 +196,17 @@ class _PersonalInformationState extends State<PersonalInformation> {
       style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[700]),
-        prefixIcon: Icon(icon, color: isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+        labelStyle:
+            TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+        prefixIcon:
+            Icon(icon, color: isDarkMode ? Colors.grey[400] : Colors.grey[700]),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!),
+          borderSide: BorderSide(
+              color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!),
         ),
         filled: true,
         fillColor: isDarkMode ? Colors.grey[800] : Colors.white,

@@ -75,7 +75,7 @@ class DBHelper {
         await db.execute('''
           CREATE TABLE exercise (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            name TEXT NOT NULL,z
             description TEXT NOT NULL,
             period INTEGER NOT NULL,
             status TEXT NOT NULL,
