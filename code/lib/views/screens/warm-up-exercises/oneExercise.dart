@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class OneExercise extends StatefulWidget {
   final List<String> exerciseSteps;
+  final String imagePath; // Path to the image asset
 
-  const OneExercise({super.key, required this.exerciseSteps});
+  const OneExercise({
+    super.key,
+    required this.exerciseSteps,
+    required this.imagePath,
+  });
 
   @override
   _OneExerciseState createState() => _OneExerciseState();
@@ -44,41 +49,97 @@ class _OneExerciseState extends State<OneExercise> {
         title: const Text("One Exercise"),
         backgroundColor: Colors.purple,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              widget.exerciseSteps[currentStep],
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            if (isStepCompleted)
-              const Icon(Icons.check_circle, color: Colors.green, size: 40),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: previousStep,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                  child: const Text("Previous"),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Display the exercise image with rounded corners and shadow
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: toggleCompletion,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: Text(isStepCompleted ? "Undo" : "Complete"),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    widget.imagePath,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                ElevatedButton(
-                  onPressed: nextStep,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-                  child: const Text("Next"),
+              ),
+              const SizedBox(height: 20),
+              // Display the current exercise step inside a Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            ),
-          ],
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        widget.exerciseSteps[currentStep],
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      if (isStepCompleted)
+                        const Icon(Icons.check_circle,
+                            color: Colors.green, size: 40),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Navigation buttons for previous, complete/undo, and next steps
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: previousStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                    child: const Text("Previous"),
+                  ),
+                  ElevatedButton(
+                    onPressed: toggleCompletion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                    child: Text(isStepCompleted ? "Undo" : "Complete"),
+                  ),
+                  ElevatedButton(
+                    onPressed: nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                    child: const Text("Next"),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

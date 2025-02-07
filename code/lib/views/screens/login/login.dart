@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
 import 'package:confident_voice/views/screens/auth/forgot_password.dart';
-import 'package:confident_voice/data/repo/dummy_authentication.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -29,16 +28,50 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> loginUserWithEmailAndPassword() async {
+    if (!_isValid) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
       final userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      print(userCredential);
+
+      // If login is successful, navigate to the home page
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              userName: userCredential.user!.email ??
+                  'User', // Use email as the username
+              profilePictureUrl:
+                  'assets/images/default_profile.png', // Replace with actual profile picture URL
+            ),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      _errorMessage = e.message;
-      print(e.message);
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _errorMessage = 'No user found with this email.';
+        } else if (e.code == 'wrong-password') {
+          _errorMessage = 'Incorrect password. Please try again.';
+        } else {
+          _errorMessage = e.message ?? 'An error occurred. Please try again.';
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -70,43 +103,6 @@ class _LoginState extends State<Login> {
       return 'Please enter your password';
     }
     return null;
-  }
-
-  Future<void> _onLoginSubmitted() async {
-    if (!_isValid) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final isLoginSuccessful = await DummyAuthentication().doLogin(
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (isLoginSuccessful) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage(
-            userName: 'User Name', // Replace with actual user name
-            profilePictureUrl: 'Profile Picture URL', // Replace with actual profile picture URL
-          )),
-        );
-      } else {
-        setState(() {
-          _errorMessage = 'Incorrect username or password';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'An error occurred during login';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
@@ -204,9 +200,7 @@ class _LoginState extends State<Login> {
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
-                              onPressed: () async {
-                                await loginUserWithEmailAndPassword();
-                              },
+                              onPressed: loginUserWithEmailAndPassword,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF412963),
                                 padding:
@@ -244,7 +238,8 @@ class _LoginState extends State<Login> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const SignUpPage()),
+                                  builder: (context) => const SignUpPage(),
+                                ),
                               );
                             },
                             child: const Text(
