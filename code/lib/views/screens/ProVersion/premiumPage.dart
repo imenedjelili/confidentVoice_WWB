@@ -175,7 +175,7 @@ class PremiumScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => HomePage(
                                       userName: userName,
-                                      profilePictureUrl: profilePictureUrl,
+                                      profilePictureUrl: profilePictureUrl, userEmail: '',
                                     ),
                                   ),
                                 );
@@ -192,7 +192,7 @@ class PremiumScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => HomePage(
                                       userName: userName,
-                                      profilePictureUrl: profilePictureUrl,
+                                      profilePictureUrl: profilePictureUrl, userEmail: '',
                                     ),
                                   ),
                                 );
