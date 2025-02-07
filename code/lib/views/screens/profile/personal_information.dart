@@ -57,7 +57,7 @@ class ProfileState {
 
 /// --- Personal Information Widget ---
 class PersonalInformation extends StatefulWidget {
-  const PersonalInformation({Key? key}) : super(key: key);
+  const PersonalInformation({super.key});
 
   @override
   State<PersonalInformation> createState() => _PersonalInformationState();

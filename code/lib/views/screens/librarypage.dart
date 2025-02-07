@@ -71,7 +71,7 @@ class _SpeechLibraryViewState extends State<_SpeechLibraryView> {
 
       final slides = await Future.wait(
         files.map((file) async {
-          final urlResponse = await Supabase.instance.client
+          final urlResponse = Supabase.instance.client
               .storage
               .from('documents')
               .getPublicUrl('slides/${file.name}');
@@ -141,7 +141,7 @@ class _SpeechLibraryViewState extends State<_SpeechLibraryView> {
         pdfFiles.map((file) async {
           print('Processing PDF: ${file.name}');
           
-          final urlResponse = await Supabase.instance.client
+          final urlResponse = Supabase.instance.client
               .storage
               .from('documents')
               .getPublicUrl('pdf/${file.name}');

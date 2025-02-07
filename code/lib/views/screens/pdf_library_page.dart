@@ -40,7 +40,7 @@ class _PdfLibraryPageState extends State<PdfLibraryPage> {
 
       final pdfs = await Future.wait(
         pdfFiles.map((file) async {
-          final urlResponse = await Supabase.instance.client
+          final urlResponse = Supabase.instance.client
               .storage
               .from('documents')
               .getPublicUrl('pdfs/${file.name}');
@@ -113,11 +113,11 @@ class _PdfLibraryPageState extends State<PdfLibraryPage> {
                 color: const Color(0xFF412963).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              child: Center(
+              child: const Center(
                 child: Icon(
                   Icons.picture_as_pdf,
                   size: 48,
-                  color: const Color(0xFF412963),
+                  color: Color(0xFF412963),
                 ),
               ),
             ),
