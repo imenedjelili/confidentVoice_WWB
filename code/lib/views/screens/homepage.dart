@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confident_voice/views/screens/ProVersion/premiumPage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confident_voice/Controllers/home_bloc.dart';
 import 'package:confident_voice/models/Events/home_event.dart';
@@ -202,6 +203,35 @@ class _HomeContentState extends State<_HomeContent> {
                   onPressed: () {
                     _showNotificationsPanel(context);
                   },
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.emoji_events,
+                    color: Colors.yellow[800],
+                  ),
+                  label: Text(
+                    "Premium",
+                    style: TextStyle(
+                      color: Colors.yellow[800],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    backgroundColor: const Color.fromARGB(255, 255, 220, 92),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                 ),
               ],
             ),

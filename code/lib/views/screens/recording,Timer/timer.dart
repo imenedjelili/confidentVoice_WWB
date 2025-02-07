@@ -4,7 +4,6 @@ import 'package:confident_voice/models/States/timer_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 class TimerPage extends StatelessWidget {
   static const String pageRoute = '/Timer';
 

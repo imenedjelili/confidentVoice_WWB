@@ -22,7 +22,7 @@ class RecordingPlayerPage extends StatelessWidget {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
-            'Recording 1',
+            'Recording',
             style: TextStyle(
               color: Colors.purple,
               fontWeight: FontWeight.bold,
@@ -73,15 +73,17 @@ class RecordingPlayerPage extends StatelessWidget {
                     },
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween ,
+                    
                     children: [
+                       
                       Text(
-                        '${state.position.inMinutes}:${(state.position.inSeconds.remainder(60)).toString().padLeft(2, '0')}',
+                        '     ${state.position.inMinutes}:${(state.position.inSeconds.remainder(60)).toString().padLeft(2, '0')}',
                         style:
                             const TextStyle(color: Colors.purple, fontSize: 15),
                       ),
                       Text(
-                        '${state.duration.inMinutes}:${(state.duration.inSeconds.remainder(60)).toString().padLeft(2, '0')}',
+                        '${state.duration.inMinutes}:${(state.duration.inSeconds.remainder(60)).toString().padLeft(2, '0')}     ',
                         style:
                             const TextStyle(color: Colors.purple, fontSize: 15),
                       ),

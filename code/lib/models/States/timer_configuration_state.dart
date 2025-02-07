@@ -1,10 +1,9 @@
-
 abstract class TimerConfigurationState {
   final int hours;
   final int minutes;
   final int seconds;
 
-  TimerConfigurationState({this.hours = 0, this.minutes = 0, this.seconds = 0});
+  TimerConfigurationState({this.hours = 4, this.minutes = 1, this.seconds = 1});
 }
 
 class TimerConfigurationInitialState extends TimerConfigurationState {}

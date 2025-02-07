@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:confident_voice/Controllers/recorder_bloc.dart';
+import 'package:confident_voice/databases/db_confidentVoice.dart';
 import 'package:confident_voice/models/Events/recorder_event.dart';
 import 'package:confident_voice/models/States/recorder_state.dart';
+import 'package:confident_voice/views/screens/recording,Timer/recordings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:record/record.dart';
+import 'package:confident_voice/models/classes/RecordedData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-
- 
 class RecorderPage extends StatefulWidget {
   const RecorderPage({super.key});
   static const String recorder = '/Recorder';
@@ -24,8 +26,12 @@ class _RecorderPageState extends State<RecorderPage> {
   final record = AudioRecorder();
   String? audioPath;
   Timer? timer;
+  int elapsedTime = 0;
 
   Future<void> startRecording(BuildContext context) async {
+    await record.stop();
+    await waveformController.stop();
+    timer?.cancel();
     audioPath = '${Directory.systemTemp.path}/audio.m4a';
 
     var status = await Permission.microphone.request();
@@ -36,17 +42,27 @@ class _RecorderPageState extends State<RecorderPage> {
       context.read<RecorderBloc>().add(StartRecordingEvent());
 
       timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        elapsedTime++;
         if (context.read<RecorderBloc>().state is RecorderRecording) {
-          final currentState =
-              context.read<RecorderBloc>().state as RecorderRecording;
-          context
-              .read<RecorderBloc>()
-              .add(UpdateDurationEvent(currentState.duration + 1));
+          context.read<RecorderBloc>().add(UpdateDurationEvent(elapsedTime));
         }
       });
     } else {
       print('Permission denied');
     }
+  }
+
+  void pauseTimer(BuildContext context) {
+    timer?.cancel();
+    context.read<RecorderBloc>().add(PauseRecordingEvent());
+  }
+
+  void resumeTimer(BuildContext context) {
+    context.read<RecorderBloc>().add(ResumeRecordingEvent());
+    timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      elapsedTime++;
+      context.read<RecorderBloc>().add(UpdateDurationEvent(elapsedTime));
+    });
   }
 
   Future<void> stopRecording(BuildContext context) async {
@@ -58,6 +74,33 @@ class _RecorderPageState extends State<RecorderPage> {
 
     if (audioPath != null) {
       print("Recording saved at $audioPath");
+
+      try {
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final recording = RecordedData(
+            userId: user.uid,
+            recordingPath: audioPath!,
+            createdAt: DateTime.now().toIso8601String(),
+          );
+
+          await RecordedDataDB.insertRecording(recording.toMap());
+          print(recording.toMap());
+          print("Recording path stored in the database.");
+        } else {
+          print("User not logged in. Cannot save recording.");
+         
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('User not logged in. Please log in to save.')),
+          );
+        }
+      } catch (e) {
+        print("Error storing recording path: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving recording: $e')),
+        );
+      }
     }
   }
 
@@ -79,11 +122,11 @@ class _RecorderPageState extends State<RecorderPage> {
           ),
         ),
         body: Center(
-          child: BlocBuilder<RecorderBloc,RecordersState>(
+          child: BlocBuilder<RecorderBloc, RecordersState>(
             builder: (context, state) {
-              int duration = 0;
+              int duration = elapsedTime;
               if (state is RecorderRecording) {
-                duration = state.duration;
+                duration = elapsedTime;
               }
 
               return Column(
@@ -114,11 +157,15 @@ class _RecorderPageState extends State<RecorderPage> {
                     child: IconButton(
                       iconSize: 40,
                       icon: Icon(
-                          state is RecorderRecording ? Icons.pause : Icons.mic),
+                        state is RecorderRecording ? Icons.pause : Icons.mic,
+                      ),
                       color: Colors.purple,
                       onPressed: () {
                         if (state is RecorderRecording) {
-                          stopRecording(context);
+                          pauseTimer(context);
+                        } else if (state is RecorderPaused &&
+                            elapsedTime != 0) {
+                          resumeTimer(context);
                         } else {
                           startRecording(context);
                         }
@@ -134,9 +181,9 @@ class _RecorderPageState extends State<RecorderPage> {
                           iconSize: 40,
                           icon: const Icon(Icons.stop),
                           color: Colors.red,
-                          onPressed: state is RecorderRecording
-                              ? () => stopRecording(context)
-                              : null,
+                          onPressed: () {
+                            stopRecording(context); // Call stopRecording here
+                          },
                         ),
                       ),
                       CircleAvatar(
@@ -146,9 +193,13 @@ class _RecorderPageState extends State<RecorderPage> {
                           icon: const Icon(Icons.check),
                           color: Colors.green,
                           onPressed: () {
-                            Navigator.pushNamed(
+                            stopRecording(
+                                context); // Call stopRecording before navigating
+                            Navigator.push(
                               context,
-                              '/Recording',
+                              MaterialPageRoute(
+                                builder: (context) => const RecordingsPage(),
+                              ),
                             );
                           },
                         ),

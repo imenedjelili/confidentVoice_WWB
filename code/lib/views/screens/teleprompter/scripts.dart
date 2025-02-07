@@ -1,26 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'teleprompter.dart';
 import 'newScript.dart';
 
 class Scripts extends StatefulWidget {
-  final String? newScript;
-
-  const Scripts({super.key, this.newScript});
+  const Scripts({super.key});
 
   @override
-  _ScriptsState createState() => _ScriptsState();
+  State<Scripts> createState() => _ScriptsState();
 }
 
 class _ScriptsState extends State<Scripts> {
-  List<String> scripts = [
-    "Public speaking can be intimidating, but with the right techniques...",
-    "Imagine a world where renewable energy powers every home...",
-    "Mental health is as important as physical health...",
-    "The universe is vast and mysterious...",
-    "Good nutrition is the cornerstone of a healthy life...",
-    "In the digital age, cybersecurity is crucial..."
-  ];
-
+  List<Map<String, dynamic>> scripts = [];
   bool isLoading = false;
   String? error;
 
@@ -28,31 +20,41 @@ class _ScriptsState extends State<Scripts> {
   void initState() {
     super.initState();
     _loadScripts();
-    if (widget.newScript != null) {
-      _addNewScript(widget.newScript!);
-    }
   }
 
-  void _loadScripts() {
+  Future<void> _loadScripts() async {
     setState(() {
       isLoading = true;
+      error = null;
     });
+
     try {
-      setState(() {
-        isLoading = false;
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('scripts')
+            .where('userId', isEqualTo: user.uid)
+            .orderBy('timestamp', descending: true)
+            .get();
+
+        setState(() {
+          scripts = querySnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = 'User not logged in';
+          isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
-        error = 'Failed to load scripts';
+        error = 'Failed to load scripts: $e';
         isLoading = false;
       });
     }
-  }
-
-  void _addNewScript(String script) {
-    setState(() {
-      scripts.add(script);
-    });
   }
 
   @override
@@ -89,7 +91,7 @@ class _ScriptsState extends State<Scripts> {
                       backgroundColor: Colors.purple,
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/logo2.png',
+                          'assets/images/logo2.png', // Replace with your logo path
                           height: 70,
                           width: 70,
                           fit: BoxFit.cover,
@@ -151,9 +153,21 @@ class _ScriptsState extends State<Scripts> {
             ),
           ),
           if (isLoading)
-            const Center(child: CircularProgressIndicator())
+            const Expanded(
+              // Use Expanded to center the indicator
+              child: Center(child: CircularProgressIndicator()),
+            )
           else if (error != null)
-            Center(child: Text(error!))
+            Expanded(
+              // Use Expanded to center the error message
+              child: Center(child: Text(error!)),
+            )
+          else if (scripts.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text("No scripts yet. Create one!"),
+              ),
+            )
           else
             Expanded(
               child: Padding(
@@ -167,13 +181,14 @@ class _ScriptsState extends State<Scripts> {
                   ),
                   itemCount: scripts.length,
                   itemBuilder: (context, index) {
+                    final script = scripts[index];
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => Teleprompter(
-                              text: scripts[index],
+                              text: script['description'],
                             ),
                           ),
                         );
@@ -185,7 +200,7 @@ class _ScriptsState extends State<Scripts> {
                         ),
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          scripts[index],
+                          script['topic'],
                           style: const TextStyle(fontSize: 16, height: 1.6),
                         ),
                       ),
@@ -194,37 +209,41 @@ class _ScriptsState extends State<Scripts> {
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 50.0,
-              vertical: 16.0,
-            ),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NewScript(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF412963),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
+       
+      
+      Padding(
+        padding:const EdgeInsets.symmetric(
+          horizontal: 50.0,
+          vertical: 16.0,
+        ),
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NewScript(),
               ),
-              child: const Center(
-                child: Text(
-                  "Create new script",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              ),
+            ).then((_) {
+              _loadScripts(); // Refresh scripts after returning
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF412963),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
             ),
           ),
-        ],
+          child: const Center(
+            child: Text(
+              "Create new script",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+          ),
+        ),
       ),
+],
+),
     );
   }
 }

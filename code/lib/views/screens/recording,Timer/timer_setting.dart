@@ -127,7 +127,6 @@ class TimerConfigurationPage extends StatelessWidget {
     );
   }
 
-
   Widget buildTimePicker(
       List<int> items, int selectedIndex, Function(int) onSelectedItemChanged) {
     return SizedBox(
@@ -164,5 +163,4 @@ class TimerConfigurationPage extends StatelessWidget {
       ),
     );
   }
-
 }
