@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:confident_voice/databases/dbhelper.dart';
+import 'package:flutter/material.dart';
 
 class UserDB {
   // Get all users
@@ -24,6 +27,17 @@ class UserDB {
   static Future<void> deleteUser(int id) async {
     final database = await DBHelper.getDatabase();
     await database.delete("User", where: "id = ?", whereArgs: [id]);
+  }
+
+  ImageProvider getImageProvider(String path, bool isAsset) {
+    if (isAsset) {
+      return AssetImage(path);
+    }
+    try {
+      return FileImage(File(path));
+    } catch (e) {
+      return const AssetImage('assets/images/image_placeholder.png');
+    }
   }
 }
 

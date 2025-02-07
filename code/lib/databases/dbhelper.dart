@@ -27,6 +27,7 @@ class DBHelper {
           password TEXT NOT NULL,
           birthday TEXT NOT NULL,
           image TEXT
+          is_asset_image INTEGER
         )
       ''');
 

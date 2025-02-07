@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confident_voice/Controllers/home_bloc.dart';
@@ -7,15 +8,20 @@ import 'package:confident_voice/views/screens/profilepage.dart';
 import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
 import 'package:confident_voice/data/quotes.dart';
+import 'package:confident_voice/databases/db_confidentVoice.dart';
 
 class HomePage extends StatelessWidget {
   final String userName;
   final String profilePictureUrl;
+  final String userEmail; // Added userEmail
+  final bool isAssetImage;
 
   const HomePage({
     super.key,
     required this.userName,
     required this.profilePictureUrl,
+    required this.userEmail, // Added userEmail
+    this.isAssetImage = false,
   });
 
   @override
@@ -25,6 +31,8 @@ class HomePage extends StatelessWidget {
       child: _HomeView(
         userName: userName,
         profilePictureUrl: profilePictureUrl,
+        userEmail: userEmail, // Passed userEmail
+        isAssetImage: isAssetImage,
       ),
     );
   }
@@ -33,10 +41,14 @@ class HomePage extends StatelessWidget {
 class _HomeView extends StatefulWidget {
   final String userName;
   final String profilePictureUrl;
+  final String userEmail; // Added userEmail
+  final bool isAssetImage;
 
   const _HomeView({
     required this.userName,
     required this.profilePictureUrl,
+    required this.userEmail, // Added userEmail
+    required this.isAssetImage,
   });
 
   @override
@@ -45,11 +57,22 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    const _HomeContent(),
-    const ContributePage(),
-    const ProfileScreen(),
-  ];
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const _HomeContent(),
+      const ContributePage(),
+      ProfileScreen(
+        userName: widget.userName,
+        userEmail: widget.userEmail, // Used actual userEmail
+        profilePictureUrl: widget.profilePictureUrl,
+        isAssetImage: widget.isAssetImage,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +141,17 @@ class _HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<_HomeContent> {
+  ImageProvider getImageProvider(String path, bool isAsset) {
+    if (isAsset) {
+      return AssetImage(path);
+    }
+    try {
+      return FileImage(File(path));
+    } catch (e) {
+      return const AssetImage('assets/images/image_placeholder.png');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final _HomeViewState homeViewState =
@@ -136,19 +170,27 @@ class _HomeContentState extends State<_HomeContent> {
             title: Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfileScreen()),
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundImage:
-                        NetworkImage(homeViewState.widget.profilePictureUrl),
-                  ),
-                ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ProfileScreen(
+                                  userName: homeViewState.widget.userName,
+                                  userEmail: homeViewState.widget.userEmail, // Used actual userEmail
+                                  profilePictureUrl:
+                                      homeViewState.widget.profilePictureUrl,
+                                  isAssetImage:
+                                      homeViewState.widget.isAssetImage,
+                                )),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundImage: getImageProvider(
+                        homeViewState.widget.profilePictureUrl,
+                        homeViewState.widget.isAssetImage,
+                      ),
+                    )),
                 const SizedBox(width: 8),
                 Text(
                   homeViewState.widget.userName,
@@ -340,7 +382,7 @@ class _HomeContentState extends State<_HomeContent> {
   }
 
   Widget _buildQuoteOfTheDay(BuildContext context) {
-    final quote = getRandomQuote(); // Get a new random quote each time widget builds
+    final quote = getRandomQuote();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -358,7 +400,6 @@ class _HomeContentState extends State<_HomeContent> {
         ),
         child: Stack(
           children: [
-            // Decorative elements
             Positioned(
               top: -10,
               left: 20,
@@ -383,7 +424,6 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
               ),
             ),
-            // Quote content
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(

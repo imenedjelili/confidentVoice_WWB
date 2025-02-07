@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
             routes: {
               '/home': (context) => const HomePage(
                     userName: 'Guest User',
-                    profilePictureUrl: 'assets/images/image_placeholder.png',
+                    profilePictureUrl: 'assets/images/image_placeholder.png', userEmail: '',
                   ),
               '/timer': (context) => const TimerPage(),
               '/recordings': (context) => const RecordingsPage(),
