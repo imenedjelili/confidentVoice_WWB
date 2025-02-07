@@ -6,6 +6,8 @@ import 'package:confident_voice/models/States/home_state.dart';
 import 'package:confident_voice/views/screens/profilepage.dart';
 import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
+import 'package:confident_voice/data/quotes.dart';
+import 'package:confident_voice/models/classes/Quote.dart';
 
 class HomePage extends StatelessWidget {
   final String userName;
@@ -109,9 +111,14 @@ class _HomeViewState extends State<_HomeView> {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends StatefulWidget {
   const _HomeContent();
 
+  @override
+  State<_HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<_HomeContent> {
   @override
   Widget build(BuildContext context) {
     final _HomeViewState homeViewState =
@@ -235,36 +242,7 @@ class _HomeContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        "Quote of the Day",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 255, 243, 140),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              "\"${state.currentQuote}\"",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontStyle: FontStyle.italic,
-                                fontFamily: 'Georgia',
-                                color: Colors.black87,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
+                      _buildQuoteOfTheDay(context),
                       const SizedBox(height: 30),
                       const Text(
                         "Categories",
@@ -359,6 +337,106 @@ class _HomeContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQuoteOfTheDay(BuildContext context) {
+    final quote = getRandomQuote(); // Get a new random quote each time widget builds
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Decorative elements
+            Positioned(
+              top: -10,
+              left: 20,
+              child: Transform.rotate(
+                angle: -0.2,
+                child: Icon(
+                  Icons.format_quote,
+                  size: 40,
+                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -10,
+              right: 20,
+              child: Transform.rotate(
+                angle: 2.9,
+                child: Icon(
+                  Icons.format_quote,
+                  size: 40,
+                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                ),
+              ),
+            ),
+            // Quote content
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Quote of the Day',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF412963),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    quote.quote,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF412963).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Confident Voice',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF412963),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.20.1
+  intl: ^0.18.1  # Updated to be compatible with syncfusion_flutter_pdfviewer
   record: ^5.2.0  # Recording library
   audioplayers: ^6.1.0  # For audio playback
   permission_handler: ^11.2.0  # For handling app permissions
@@ -33,7 +33,8 @@ dependencies:
   path_provider: ^2.0.11
   path: ^1.8.0
   google_sign_in: ^6.2.2
-
+  url_launcher: ^6.2.4
+  syncfusion_flutter_pdfviewer: ^20.4.54
 
 dev_dependencies:
   flutter_test:
@@ -43,6 +44,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/
     - assets/images/logo.png
     - assets/images/Creativity_pana.png
     - assets/images/image_placeholder.png
