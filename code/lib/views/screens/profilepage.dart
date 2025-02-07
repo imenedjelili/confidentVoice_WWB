@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confident_voice/Controllers/theme_bloc.dart';
 import 'package:confident_voice/views/screens/login/login.dart';
 import 'package:confident_voice/views/screens/profile/help_center.dart';
-import 'package:confident_voice/views/screens/profile/logout.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userName;
@@ -14,12 +13,12 @@ class ProfileScreen extends StatefulWidget {
   final bool isAssetImage;
 
   const ProfileScreen({
-    Key? key,
+    super.key,
     required this.userName,
     required this.userEmail,
     required this.profilePictureUrl,
     this.isAssetImage = false,
-  }) : super(key: key);
+  });
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();

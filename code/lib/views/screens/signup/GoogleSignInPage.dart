@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'birthday.dart'; // Import your Birthday page
 
 class GoogleSignInPage extends StatefulWidget {
-  const GoogleSignInPage({Key? key}) : super(key: key);
+  const GoogleSignInPage({super.key});
 
   @override
   _GoogleSignInPageState createState() => _GoogleSignInPageState();

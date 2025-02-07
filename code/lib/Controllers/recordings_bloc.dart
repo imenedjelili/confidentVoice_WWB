@@ -50,7 +50,7 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
 
           return userId;
         } else if (userId is String) {
-          return int.tryParse(userId) ?? null;
+          return int.tryParse(userId);
         }
       }
       return null; 

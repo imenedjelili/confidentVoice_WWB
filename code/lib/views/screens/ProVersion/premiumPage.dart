@@ -184,7 +184,7 @@ class PremiumScreen extends StatelessWidget {
                                     "Error fetching from Firestore: $firestoreError");
                                 final userName = currentUser?.displayName ??
                                     'Guest'; 
-                                final profilePictureUrl =
+                                const profilePictureUrl =
                                     'assets/images/default_profile.png'; 
 
                                 Navigator.pushReplacement(
@@ -192,7 +192,7 @@ class PremiumScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => HomePage(
                                       userName: userName,
-                                      profilePictureUrl: profilePictureUrl, userEmail: '',
+                                      profilePictureUrl: profilePictureUrl, userEmail: '3',
                                     ),
                                   ),
                                 );

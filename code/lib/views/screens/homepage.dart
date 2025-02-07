@@ -9,7 +9,6 @@ import 'package:confident_voice/views/screens/profilepage.dart';
 import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
 import 'package:confident_voice/data/quotes.dart';
-import 'package:confident_voice/databases/db_confidentVoice.dart';
 
 class HomePage extends StatelessWidget {
   final String userName;

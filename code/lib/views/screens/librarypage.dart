@@ -6,7 +6,6 @@ import 'package:confident_voice/models/classes/slide.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confident_voice/views/screens/pdf_viewer.dart';
 import 'package:confident_voice/views/screens/document_list.dart';
-import 'package:confident_voice/utils/string_extensions.dart';
 
 class SpeechLibraryPage extends StatelessWidget {
   const SpeechLibraryPage({super.key});

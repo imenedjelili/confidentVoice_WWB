@@ -48,10 +48,16 @@ class _LoginState extends State<Login> {
           context,
           MaterialPageRoute(
             builder: (context) => HomePage(
-                userName: userCredential.user!.email!.split('@')[0] ??
+              userName: userCredential.user!.email!
+                      .split('@')[0]
+                      .replaceAll('.', ' ')
+                      .splitMapJoin(RegExp(r'\w+'),
+                          onMatch: (m) =>
+                              m.group(0)!.substring(0, 1).toUpperCase() +
+                              m.group(0)!.substring(1).toLowerCase()) ??
                   'User', // Use email as the username
-              profilePictureUrl:
-                  'assets/images/default_profile.png', userEmail: userCredential.user!.email ??
+              profilePictureUrl: 'assets/images/default_profile.png',
+              userEmail: userCredential.user!.email ??
                   'UserEmail', // Replace with actual profile picture URL
             ),
           ),

@@ -65,6 +65,30 @@ class Exercises extends StatelessWidget {
         'Step 4: Maintain rhythm for 6 minutes.'
       ],
     },
+    {
+      'title': 'Relaxation Techniques',
+      'duration': '10 minutes',
+      'progress': 0.4,
+      'imagePath': 'assets/images/exo3.png',
+      'steps': [
+        'Step 1: Find a quiet place and sit comfortably.',
+        'Step 2: Close your eyes and take deep breaths.',
+        'Step 3: Focus on relaxing each part of your body.',
+        'Step 4: Continue for 10 minutes.'
+      ],
+    },
+    {
+      'title': 'Mindfulness Meditation',
+      'duration': '15 minutes',
+      'progress': 0.9,
+      'imagePath': 'assets/images/exo1.png',
+      'steps': [
+        'Step 1: Sit in a comfortable position.',
+        'Step 2: Focus on your breath.',
+        'Step 3: Observe your thoughts without judgment.',
+        'Step 4: Continue for 15 minutes.'
+      ],
+    },
   ];
 
   void _navigateToExercise(
@@ -74,7 +98,7 @@ class Exercises extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => OneExercise(
           exerciseSteps: List<String>.from(exercise['steps']),
-          imagePath: '',
+          imagePath: exercise['imagePath'],
         ),
       ),
     );
