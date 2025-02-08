@@ -267,6 +267,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   builder: (context) {
                     return ElevatedButton(
                       onPressed: () => _upgradeToPremium(context),
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFD700),
                         padding: const EdgeInsets.symmetric(
