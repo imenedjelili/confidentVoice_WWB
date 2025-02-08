@@ -12,6 +12,7 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:record/record.dart';
 import 'package:confident_voice/models/classes/RecordedData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class RecorderPage extends StatefulWidget {
   const RecorderPage({super.key});
@@ -87,18 +88,26 @@ class _RecorderPageState extends State<RecorderPage> {
           await RecordedDataDB.insertRecording(recording.toMap());
           print(recording.toMap());
           print("Recording path stored in the database.");
+          ScaffoldMessenger.of(context).showSnackBar(
+            StyledSnackBar.show(
+              message: 'Recording saved successfully!',
+            ),
+          );
         } else {
           print("User not logged in. Cannot save recording.");
-         
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('User not logged in. Please log in to save.')),
+            StyledSnackBar.show(
+              message: 'User not logged in. Please log in to save.',
+            ),
           );
         }
       } catch (e) {
         print("Error storing recording path: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving recording: $e')),
+          StyledSnackBar.show(
+            message: 'Error saving recording: $e',
+            isError: true,
+          ),
         );
       }
     }

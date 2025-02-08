@@ -8,7 +8,12 @@ import 'package:confident_voice/models/States/home_state.dart';
 import 'package:confident_voice/views/screens/profilepage.dart';
 import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
+import 'package:confident_voice/views/screens/progress_tracker.dart';
 import 'package:confident_voice/data/quotes.dart';
+import 'package:confident_voice/databases/db_confidentVoice.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class HomePage extends StatelessWidget {
   final String userName;
@@ -58,6 +63,7 @@ class _HomeView extends StatefulWidget {
 class _HomeViewState extends State<_HomeView> {
   int _currentIndex = 0;
   late List<Widget> _screens;
+  late Stream<bool> _premiumStream;
 
   @override
   void initState() {
@@ -72,6 +78,67 @@ class _HomeViewState extends State<_HomeView> {
         isAssetImage: widget.isAssetImage,
       ),
     ];
+    _premiumStream = _createPremiumStream();
+  }
+
+  Stream<bool> _createPremiumStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return Stream.value(false);
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .snapshots()
+        .map((snapshot) => snapshot.data()?['isPremium'] ?? false);
+  }
+
+  Widget _buildPremiumOrProgressButton(BuildContext context, bool isPremium) {
+    if (!isPremium) {
+      return TextButton.icon(
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PremiumScreen(),
+            ),
+          );
+          // Recheck premium status after returning from premium screen
+          _premiumStream = _createPremiumStream();
+        },
+        icon: Icon(
+          Icons.emoji_events,
+          color: Colors.yellow[800],
+        ),
+        label: Text(
+          "Premium",
+          style: TextStyle(
+            color: Colors.yellow[800],
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          backgroundColor: const Color.fromARGB(255, 255, 220, 92),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+    } else {
+      return IconButton(
+        icon: const Icon(Icons.bar_chart_rounded),
+        color: Theme.of(context).primaryColor,
+        tooltip: 'Progress Tracker',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProgressTrackerScreen(),
+            ),
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -164,33 +231,33 @@ class _HomeContentState extends State<_HomeContent> {
               ? Colors.grey[900]
               : const Color(0xFFF6F6F6),
           appBar: AppBar(
-            automaticallyImplyLeading: false,
             backgroundColor: Colors.transparent,
             elevation: 0,
+            automaticallyImplyLeading: false,
             title: Row(
               children: [
                 GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ProfileScreen(
-                                  userName: homeViewState.widget.userName,
-                                  userEmail: homeViewState.widget.userEmail, // Used actual userEmail
-                                  profilePictureUrl:
-                                      homeViewState.widget.profilePictureUrl,
-                                  isAssetImage:
-                                      homeViewState.widget.isAssetImage,
-                                )),
-                      );
-                    },
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundImage: getImageProvider(
-                        homeViewState.widget.profilePictureUrl,
-                        homeViewState.widget.isAssetImage,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                          userName: homeViewState.widget.userName,
+                          userEmail: homeViewState.widget.userEmail,
+                          profilePictureUrl: homeViewState.widget.profilePictureUrl,
+                          isAssetImage: homeViewState.widget.isAssetImage,
+                        ),
                       ),
-                    )),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundImage: getImageProvider(
+                      homeViewState.widget.profilePictureUrl,
+                      homeViewState.widget.isAssetImage,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   homeViewState.widget.userName,
@@ -202,19 +269,9 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.search, color: Colors.black),
-                  onPressed: () {
-                    showSearch(
-                      context: context,
-                      delegate: CustomSearchDelegate(),
-                    );
-                  },
-                ),
-                IconButton(
                   icon: Stack(
                     children: [
-                      const Icon(Icons.notifications_outlined,
-                          color: Colors.black),
+                      const Icon(Icons.notifications_outlined, color: Colors.black),
                       Positioned(
                         right: 0,
                         top: 0,
@@ -244,34 +301,12 @@ class _HomeContentState extends State<_HomeContent> {
                     _showNotificationsPanel(context);
                   },
                 ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PremiumScreen(),
-                      ),
-                    );
+                StreamBuilder<bool>(
+                  stream: homeViewState._premiumStream,
+                  builder: (context, snapshot) {
+                    final isPremium = snapshot.data ?? false;
+                    return homeViewState._buildPremiumOrProgressButton(context, isPremium);
                   },
-                  icon: Icon(
-                    Icons.emoji_events,
-                    color: Colors.yellow[800],
-                  ),
-                  label: Text(
-                    "Premium",
-                    style: TextStyle(
-                      color: Colors.yellow[800],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    backgroundColor: const Color.fromARGB(255, 255, 220, 92),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
                 ),
               ],
             ),

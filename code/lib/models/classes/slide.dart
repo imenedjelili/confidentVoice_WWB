@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Slide {
   final String id;
   final String title;
@@ -5,7 +7,11 @@ class Slide {
   final String url;
   final String category;
   final String uploadedBy;
+  final String uploaderName;
   final DateTime uploadedAt;
+  final String type;
+  final int? size;
+  final Map<String, dynamic>? metadata;
 
   Slide({
     required this.id,
@@ -14,7 +20,11 @@ class Slide {
     required this.url,
     required this.category,
     required this.uploadedBy,
+    required this.uploaderName,
     required this.uploadedAt,
+    required this.type,
+    this.size,
+    this.metadata,
   });
 
   factory Slide.fromJson(Map<String, dynamic> json) {
@@ -25,7 +35,11 @@ class Slide {
       url: json['url'] as String,
       category: json['category'] as String,
       uploadedBy: json['uploaded_by'] as String,
-      uploadedAt: DateTime.parse(json['uploaded_at'] as String),
+      uploaderName: json['uploader_name'] as String? ?? 'Unknown User',
+      uploadedAt: (json['uploaded_at'] as Timestamp).toDate(),
+      type: json['type'] as String? ?? 'unknown',
+      size: json['size'] as int?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
 
@@ -37,7 +51,11 @@ class Slide {
       'url': url,
       'category': category,
       'uploaded_by': uploadedBy,
+      'uploader_name': uploaderName,
       'uploaded_at': uploadedAt.toIso8601String(),
+      'type': type,
+      'size': size,
+      'metadata': metadata,
     };
   }
 }

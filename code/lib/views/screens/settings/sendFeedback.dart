@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class SendFeedbackScreen extends StatelessWidget {
   const SendFeedbackScreen({super.key});
@@ -61,17 +62,16 @@ class _FeedbackContentState extends State<FeedbackContent> {
             onPressed: () {
               if (_feedbackController.text.isNotEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Feedback sent successfully!"),
-                    duration: Duration(seconds: 2),
+                  StyledSnackBar.show(
+                    message: 'Thank you for your feedback!',
                   ),
                 );
                 _feedbackController.clear();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Please enter feedback before sending."),
-                    duration: Duration(seconds: 2),
+                  StyledSnackBar.show(
+                    message: 'Please enter your feedback',
+                    isError: true,
                   ),
                 );
               }

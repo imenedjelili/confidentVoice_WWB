@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class EditProfileScreen extends StatelessWidget {
   const EditProfileScreen({super.key});
@@ -68,9 +69,8 @@ class _EditProfileContentState extends State<EditProfileContent> {
             child: GestureDetector(
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text("Change profile picture feature coming soon!"),
+                  StyledSnackBar.show(
+                    message: 'Change profile picture feature coming soon!',
                   ),
                 );
               },
@@ -135,14 +135,15 @@ class _EditProfileContentState extends State<EditProfileContent> {
               _emailController.text.isEmpty ||
               _phoneController.text.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Please fill out all fields."),
+              StyledSnackBar.show(
+                message: 'Please fill out all fields',
+                isError: true,
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Changes saved successfully!"),
+              StyledSnackBar.show(
+                message: 'Changes saved successfully!',
               ),
             );
           }

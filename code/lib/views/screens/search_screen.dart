@@ -1,52 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:confident_voice/models/classes/slide.dart';
-import 'package:confident_voice/views/screens/pdf_viewer.dart';
 import 'package:confident_voice/services/document_service.dart';
-import 'package:confident_voice/views/screens/ProVersion/premiumPage.dart';
+import 'package:confident_voice/views/screens/pdf_viewer.dart';
 import 'package:confident_voice/widgets/styled_snackbar.dart';
 
-class DocumentListScreen extends StatefulWidget {
-  final String title;
-  final bool isSlideView;
-
-  const DocumentListScreen({
-    super.key,
-    required this.title,
-    required this.isSlideView,
-  });
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
 
   @override
-  State<DocumentListScreen> createState() => _DocumentListScreenState();
+  State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _DocumentListScreenState extends State<DocumentListScreen> {
+class _SearchScreenState extends State<SearchScreen> {
   final DocumentService _documentService = DocumentService();
-  List<Slide> _documents = [];
-  bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  List<Slide> _searchResults = [];
+  bool _isLoading = false;
+  String _searchQuery = '';
 
   @override
-  void initState() {
-    super.initState();
-    _loadDocuments();
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
-  Future<void> _loadDocuments() async {
-    try {
-      setState(() => _isLoading = true);
-      final documents = widget.isSlideView
-          ? await _documentService.getSlides(category: widget.title)
-          : await _documentService.getPdfs(category: widget.title);
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
       setState(() {
-        _documents = documents;
+        _searchResults = [];
+        _searchQuery = '';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _searchQuery = query;
+    });
+
+    try {
+      // Fetch all documents
+      final slides = await _documentService.getSlides();
+      final pdfs = await _documentService.getPdfs();
+      final allDocuments = [...slides, ...pdfs];
+
+      // Filter documents based on search query
+      final results = allDocuments.where((doc) {
+        final searchLower = query.toLowerCase();
+        return doc.title.toLowerCase().contains(searchLower) ||
+            doc.category.toLowerCase().contains(searchLower) ||
+            (doc.description?.toLowerCase().contains(searchLower) ?? false) ||
+            doc.uploaderName.toLowerCase().contains(searchLower);
+      }).toList();
+
+      setState(() {
+        _searchResults = results;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading documents: $e');
+      print('Error performing search: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           StyledSnackBar.show(
-            message: 'Error loading documents: $e',
+            message: 'Error searching: $e',
             isError: true,
           ),
         );
@@ -70,32 +87,40 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Search documents...',
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Colors.grey[400]),
+          ),
+          style: const TextStyle(fontSize: 16),
+          onChanged: (value) => _performSearch(value),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PremiumScreen()),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                _performSearch('');
+              },
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDocuments,
-          ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _documents.isEmpty
+          : _searchResults.isEmpty
               ? Center(
                   child: Text(
-                    'No ${widget.isSlideView ? 'slides' : 'PDFs'} available in this category',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    _searchQuery.isEmpty
+                        ? 'Start typing to search...'
+                        : 'No results found for "$_searchQuery"',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
                   ),
                 )
               : GridView.builder(
@@ -106,17 +131,12 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
-                  itemCount: _documents.length,
+                  itemCount: _searchResults.length,
                   itemBuilder: (context, index) {
-                    final document = _documents[index];
+                    final document = _searchResults[index];
                     return Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       child: InkWell(
                         onTap: () => _openDocument(document),
-                        borderRadius: BorderRadius.circular(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -126,12 +146,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF412963).withOpacity(0.1),
                                   borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(12),
+                                    top: Radius.circular(4),
                                   ),
                                 ),
                                 child: Center(
                                   child: Icon(
-                                    widget.isSlideView ? Icons.slideshow : Icons.description,
+                                    document.type == 'pdf'
+                                        ? Icons.picture_as_pdf
+                                        : Icons.slideshow,
                                     size: 48,
                                     color: const Color(0xFF412963),
                                   ),
@@ -141,7 +163,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                             Expanded(
                               flex: 2,
                               child: Padding(
-                                padding: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.all(8),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -157,6 +179,24 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF412963).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        document.category,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF412963),
+                                        ),
                                       ),
                                     ),
                                   ],

@@ -1,11 +1,154 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confident_voice/Controllers/premiumPlanCUbit.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
+import 'package:confident_voice/widgets/custom_snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-class PremiumScreen extends StatelessWidget {
+
+class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
+
+  @override
+  State<PremiumScreen> createState() => _PremiumScreenState();
+}
+
+class _PremiumScreenState extends State<PremiumScreen> {
+  late String userName = '';
+  late String userEmail = '';
+  late String profilePictureUrl = '';
+  bool isAssetImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userData.exists) {
+        setState(() {
+          userName = userData.data()?['name'] ?? userData.data()?['fullName'] ?? 'Guest';
+          userEmail = userData.data()?['email'] ?? user.email ?? '';
+          profilePictureUrl = userData.data()?['profilePictureUrl'] ?? 'assets/images/default_profile.png';
+          isAssetImage = profilePictureUrl.startsWith('assets/');
+        });
+      }
+    }
+  }
+
+  Future<void> _upgradeToPremium(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final selectedPlan = context.read<PremiumCubit>().state;
+        if (selectedPlan == PremiumPlan.none) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please select a plan to continue."),
+            ),
+          );
+        } else {
+          // Update user's premium status
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({
+            'isPremium': true,
+            'premiumPlan': selectedPlan == PremiumPlan.monthly ? 'monthly' : 'yearly',
+            'premiumExpiryDate': _calculateExpiryDate(selectedPlan),
+          });
+
+          // Set premium status first
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({'isPremium': true});
+
+          // Initialize progress tracking data
+          final today = DateTime.now();
+          final todayStr = '${today.year}-${today.month}-${today.day}';
+          
+          await FirebaseFirestore.instance
+              .collection('user_progress')
+              .doc(user.uid)
+              .set({
+            'lastReadDate': today.millisecondsSinceEpoch,
+            'lastContributionDate': today.millisecondsSinceEpoch,
+            'currentStreak': 0,
+            'totalContributions': 0,
+            'dailyProgress': {
+              todayStr: {
+                'readingTime': 0,
+                'contributions': 0,
+              }
+            },
+          }, SetOptions(merge: true));
+
+          if (mounted) {
+            CustomSnackBar.show(
+              context,
+              message: 'Welcome to Premium! Your progress tracking journey begins now.',
+              actionLabel: 'View Progress',
+              onActionPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(
+                      userName: userName,
+                      userEmail: userEmail,
+                      profilePictureUrl: profilePictureUrl,
+                      isAssetImage: isAssetImage,
+                    ),
+                  ),
+                  (route) => false,
+                );
+              },
+              duration: const Duration(seconds: 5),
+            );
+
+            // Navigate back to homepage
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(
+                  userName: userName,
+                  userEmail: userEmail,
+                  profilePictureUrl: profilePictureUrl,
+                  isAssetImage: isAssetImage,
+                ),
+              ),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error upgrading to premium: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error upgrading to premium: $e')),
+        );
+      }
+    }
+  }
+
+  DateTime _calculateExpiryDate(PremiumPlan plan) {
+    if (plan == PremiumPlan.monthly) {
+      return DateTime.now().add(const Duration(days: 30));
+    } else if (plan == PremiumPlan.yearly) {
+      return DateTime.now().add(const Duration(days: 365));
+    } else {
+      return DateTime.now();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,113 +266,24 @@ class PremiumScreen extends StatelessWidget {
                 Builder(
                   builder: (context) {
                     return ElevatedButton(
-                      onPressed: () async {
-                        final selectedPlan = context.read<PremiumCubit>().state;
-                        if (selectedPlan == PremiumPlan.none) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text("Please select a plan to continue."),
-                            ),
-                          );
-                        } else {
-                          try {
-                            final user = FirebaseAuth.instance.currentUser;
-                            if (user != null) {
-                              await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(user.uid)
-                                  .update({
-                                'isPremium': true,
-                                'premiumPlan':
-                                    selectedPlan == PremiumPlan.monthly
-                                        ? 'monthly'
-                                        : 'yearly',
-                                'premiumExpiryDate':
-                                    _calculateExpiryDate(selectedPlan),
-                              });
+                      onPressed: () => _upgradeToPremium(context),
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "You have successfully upgraded to the ${selectedPlan == PremiumPlan.monthly ? 'Monthly' : 'Yearly'} plan!",
-                                  ),
-                                ),
-                              );
-                              final currentUser =
-                                  FirebaseAuth.instance.currentUser;
-                              try {
-                                final userDoc = await FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(currentUser!.uid)
-                                    .get();
-
-                                final userName =userDoc['fullName']??
-                                    currentUser.displayName;
-                                final String profilePictureUrl =
-                                    userDoc.get('profilePictureUrl') ??
-                                        'assets/images/default_profile.png';
-
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => HomePage(
-                                      userName: userName,
-                                      profilePictureUrl: profilePictureUrl, userEmail: '',
-                                    ),
-                                  ),
-                                );
-                              } catch (firestoreError) {
-                                print(
-                                    "Error fetching from Firestore: $firestoreError");
-                                final userName = currentUser?.displayName ??
-                                    'Guest'; 
-                                const profilePictureUrl =
-                                    'assets/images/default_profile.png'; 
-
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => HomePage(
-                                      userName: userName,
-                                      profilePictureUrl: profilePictureUrl, userEmail: '3',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("User not logged in."),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Error upgrading: $e"),
-                              ),
-                            );
-                          }
-                        }
-                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
+                        backgroundColor: const Color(0xFFFFD700),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 15),
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          side: const BorderSide(
-                            color: Color(0xFFFFD700),
-                            width: 2,
-                          ),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       child: const Text(
-                        "Upgrade Now",
+                        'Upgrade Now',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Color(0xFFFFD700),
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF6A1B9A),
                         ),
                       ),
                     );
@@ -255,17 +309,8 @@ class PremiumScreen extends StatelessWidget {
       ),
     );
   }
-
-  DateTime _calculateExpiryDate(PremiumPlan plan) {
-    if (plan == PremiumPlan.monthly) {
-      return DateTime.now().add(const Duration(days: 30));
-    } else if (plan == PremiumPlan.yearly) {
-      return DateTime.now().add(const Duration(days: 365));
-    } else {
-      return DateTime.now();
-    }
-  }
 }
+
 class PremiumFeature extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -316,7 +361,6 @@ class PremiumFeature extends StatelessWidget {
     );
   }
 }
-
 
 class PremiumPlanCard extends StatelessWidget {
   final String title;
