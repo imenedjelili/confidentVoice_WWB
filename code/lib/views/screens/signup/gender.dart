@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confident_voice/views/screens/login/login.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'profile_picture.dart';
 
@@ -17,7 +18,10 @@ class _GenderState extends State<Gender> {
   void _onContinuePressed() async {
     if (_selectedGender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select your gender")),
+        StyledSnackBar.show(
+          message: 'Please select your gender',
+          isError: true,
+        ),
       );
       return;
     }
@@ -40,7 +44,10 @@ class _GenderState extends State<Gender> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving gender: $e")),
+        StyledSnackBar.show(
+          message: 'Error updating gender: $e',
+          isError: true,
+        ),
       );
     }
   }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -57,7 +58,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
   // Utility method to show SnackBar messages.
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+        .showSnackBar(StyledSnackBar.show(message: message, isError: !message.contains('successfully')));
   }
 
   // Pick an image from the gallery.

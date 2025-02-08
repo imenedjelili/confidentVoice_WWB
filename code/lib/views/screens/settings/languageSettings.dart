@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
@@ -60,9 +61,8 @@ class _LanguageContentState extends State<LanguageContent> {
             _currentLanguage = value!;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Language changed to $_currentLanguage"),
-              duration: const Duration(seconds: 1),
+            StyledSnackBar.show(
+              message: 'Language changed to $_currentLanguage',
             ),
           );
         },

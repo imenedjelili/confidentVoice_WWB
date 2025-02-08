@@ -1,6 +1,7 @@
 import 'package:confident_voice/views/screens/auth/forgot_password.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -31,16 +32,24 @@ class _SecurityScreenState extends State<SecurityScreen> {
       if (_newPasswordController.text == _confirmPasswordController.text) {
         await user.updatePassword(_newPasswordController.text);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Password updated successfully!")),
+          StyledSnackBar.show(
+            message: 'Password changed successfully!',
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("New passwords do not match!")),
+          StyledSnackBar.show(
+            message: 'New passwords do not match!',
+            isError: true,
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Old password is incorrect!")),
+        StyledSnackBar.show(
+          message: 'Error: $e',
+          isError: true,
+        ),
       );
     }
   }

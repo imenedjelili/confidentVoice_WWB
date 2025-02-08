@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class NewScript extends StatefulWidget {
   const NewScript({super.key});
@@ -39,20 +40,35 @@ class _NewScriptState extends State<NewScript> {
           descriptionController.clear();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Script saved successfully!')),
+            StyledSnackBar.show(
+              message: 'Script saved successfully',
+            ),
           );
 
           Navigator.pop(context); // Go back to the Scripts screen
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User not logged in.')),
+            StyledSnackBar.show(
+              message: 'User not logged in.',
+              isError: true,
+            ),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving script: $e')),
+          StyledSnackBar.show(
+            message: 'Error saving script: $e',
+            isError: true,
+          ),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        StyledSnackBar.show(
+          message: 'Please enter script content',
+          isError: true,
+        ),
+      );
     }
   }
 

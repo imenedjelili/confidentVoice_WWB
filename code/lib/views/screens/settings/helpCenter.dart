@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class HelpCenterScreen extends StatelessWidget {
   const HelpCenterScreen({super.key});
@@ -99,9 +100,8 @@ class _HelpCenterContentState extends State<HelpCenterContent> {
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("You selected: ${_filteredTopics[index]}"),
-                  duration: const Duration(seconds: 1),
+                StyledSnackBar.show(
+                  message: 'You selected: ${_filteredTopics[index]}',
                 ),
               );
             },
