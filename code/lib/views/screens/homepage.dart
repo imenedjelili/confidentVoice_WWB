@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:confident_voice/views/screens/ProVersion/premiumPage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,16 +8,25 @@ import 'package:confident_voice/models/States/home_state.dart';
 import 'package:confident_voice/views/screens/profilepage.dart';
 import 'package:confident_voice/views/screens/librarypage.dart';
 import 'package:confident_voice/views/screens/contributepage.dart';
+import 'package:confident_voice/views/screens/progress_tracker.dart';
 import 'package:confident_voice/data/quotes.dart';
+import 'package:confident_voice/databases/db_confidentVoice.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class HomePage extends StatelessWidget {
   final String userName;
   final String profilePictureUrl;
+  final String userEmail; // Added userEmail
+  final bool isAssetImage;
 
   const HomePage({
     super.key,
     required this.userName,
     required this.profilePictureUrl,
+    required this.userEmail, // Added userEmail
+    this.isAssetImage = false,
   });
 
   @override
@@ -26,6 +36,8 @@ class HomePage extends StatelessWidget {
       child: _HomeView(
         userName: userName,
         profilePictureUrl: profilePictureUrl,
+        userEmail: userEmail, // Passed userEmail
+        isAssetImage: isAssetImage,
       ),
     );
   }
@@ -34,10 +46,14 @@ class HomePage extends StatelessWidget {
 class _HomeView extends StatefulWidget {
   final String userName;
   final String profilePictureUrl;
+  final String userEmail; // Added userEmail
+  final bool isAssetImage;
 
   const _HomeView({
     required this.userName,
     required this.profilePictureUrl,
+    required this.userEmail, // Added userEmail
+    required this.isAssetImage,
   });
 
   @override
@@ -46,11 +62,84 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    const _HomeContent(),
-    const ContributePage(),
-    const ProfileScreen(),
-  ];
+  late List<Widget> _screens;
+  late Stream<bool> _premiumStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const _HomeContent(),
+      const ContributePage(),
+      ProfileScreen(
+        userName: widget.userName,
+        userEmail: widget.userEmail, // Used actual userEmail
+        profilePictureUrl: widget.profilePictureUrl,
+        isAssetImage: widget.isAssetImage,
+      ),
+    ];
+    _premiumStream = _createPremiumStream();
+  }
+
+  Stream<bool> _createPremiumStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return Stream.value(false);
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .snapshots()
+        .map((snapshot) => snapshot.data()?['isPremium'] ?? false);
+  }
+
+  Widget _buildPremiumOrProgressButton(BuildContext context, bool isPremium) {
+    if (!isPremium) {
+      return TextButton.icon(
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PremiumScreen(),
+            ),
+          );
+          // Recheck premium status after returning from premium screen
+          _premiumStream = _createPremiumStream();
+        },
+        icon: Icon(
+          Icons.emoji_events,
+          color: Colors.yellow[800],
+        ),
+        label: Text(
+          "Premium",
+          style: TextStyle(
+            color: Colors.yellow[800],
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          backgroundColor: const Color.fromARGB(255, 255, 220, 92),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+    } else {
+      return IconButton(
+        icon: const Icon(Icons.bar_chart_rounded),
+        color: Theme.of(context).primaryColor,
+        tooltip: 'Progress Tracker',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProgressTrackerScreen(),
+            ),
+          );
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +208,17 @@ class _HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<_HomeContent> {
+  ImageProvider getImageProvider(String path, bool isAsset) {
+    if (isAsset) {
+      return AssetImage(path);
+    }
+    try {
+      return FileImage(File(path));
+    } catch (e) {
+      return const AssetImage('assets/images/image_placeholder.png');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final _HomeViewState homeViewState =
@@ -131,9 +231,9 @@ class _HomeContentState extends State<_HomeContent> {
               ? Colors.grey[900]
               : const Color(0xFFF6F6F6),
           appBar: AppBar(
-            automaticallyImplyLeading: false,
             backgroundColor: Colors.transparent,
             elevation: 0,
+            automaticallyImplyLeading: false,
             title: Row(
               children: [
                 GestureDetector(
@@ -141,13 +241,21 @@ class _HomeContentState extends State<_HomeContent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ProfileScreen()),
+                        builder: (context) => ProfileScreen(
+                          userName: homeViewState.widget.userName,
+                          userEmail: homeViewState.widget.userEmail,
+                          profilePictureUrl: homeViewState.widget.profilePictureUrl,
+                          isAssetImage: homeViewState.widget.isAssetImage,
+                        ),
+                      ),
                     );
                   },
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundImage:
-                        NetworkImage(homeViewState.widget.profilePictureUrl),
+                    backgroundImage: getImageProvider(
+                      homeViewState.widget.profilePictureUrl,
+                      homeViewState.widget.isAssetImage,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -161,19 +269,9 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.search, color: Colors.black),
-                  onPressed: () {
-                    showSearch(
-                      context: context,
-                      delegate: CustomSearchDelegate(),
-                    );
-                  },
-                ),
-                IconButton(
                   icon: Stack(
                     children: [
-                      const Icon(Icons.notifications_outlined,
-                          color: Colors.black),
+                      const Icon(Icons.notifications_outlined, color: Colors.black),
                       Positioned(
                         right: 0,
                         top: 0,
@@ -203,34 +301,12 @@ class _HomeContentState extends State<_HomeContent> {
                     _showNotificationsPanel(context);
                   },
                 ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PremiumScreen(),
-                      ),
-                    );
+                StreamBuilder<bool>(
+                  stream: homeViewState._premiumStream,
+                  builder: (context, snapshot) {
+                    final isPremium = snapshot.data ?? false;
+                    return homeViewState._buildPremiumOrProgressButton(context, isPremium);
                   },
-                  icon: Icon(
-                    Icons.emoji_events,
-                    color: Colors.yellow[800],
-                  ),
-                  label: Text(
-                    "Premium",
-                    style: TextStyle(
-                      color: Colors.yellow[800],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    backgroundColor: const Color.fromARGB(255, 255, 220, 92),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -380,7 +456,7 @@ class _HomeContentState extends State<_HomeContent> {
   }
 
   Widget _buildQuoteOfTheDay(BuildContext context) {
-    final quote = getRandomQuote(); // Get a new random quote each time widget builds
+    final quote = getRandomQuote();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -398,7 +474,6 @@ class _HomeContentState extends State<_HomeContent> {
         ),
         child: Stack(
           children: [
-            // Decorative elements
             Positioned(
               top: -10,
               left: 20,
@@ -423,7 +498,6 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
               ),
             ),
-            // Quote content
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(

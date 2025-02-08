@@ -1,5 +1,6 @@
 import 'package:confident_voice/views/screens/signup/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
 import 'package:confident_voice/views/screens/auth/forgot_password.dart';
@@ -36,42 +37,61 @@ class _LoginState extends State<Login> {
     });
 
     try {
-      final userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // If login is successful, navigate to the home page
       if (userCredential.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              userName: userCredential.user!.email ??
-                  'User', // Use email as the username
-              profilePictureUrl:
-                  'assets/images/default_profile.png', // Replace with actual profile picture URL
+        // Fetch user data from Firestore
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        String userName = 'Guest';
+        String profilePictureUrl = 'assets/images/default_profile.png';
+        bool isAssetImage = true;
+
+        if (userDoc.exists) {
+          final userData = userDoc.data()!;
+          userName = userData['name'] ?? userData['fullName'] ?? 'Guest';
+          if (userData['profilePictureUrl'] != null) {
+            profilePictureUrl = userData['profilePictureUrl'];
+            isAssetImage = false;
+          }
+        }
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                userName: userName,
+                userEmail: userCredential.user!.email ?? '',
+                profilePictureUrl: profilePictureUrl,
+                isAssetImage: isAssetImage,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
+        _isLoading = false;
         if (e.code == 'user-not-found') {
           _errorMessage = 'No user found with this email.';
         } else if (e.code == 'wrong-password') {
-          _errorMessage = 'Incorrect password. Please try again.';
+          _errorMessage = 'Wrong password provided.';
         } else {
-          _errorMessage = e.message ?? 'An error occurred. Please try again.';
+          _errorMessage = e.message;
         }
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An error occurred: $e';
+      });
     }
   }
 

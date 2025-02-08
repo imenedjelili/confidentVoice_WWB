@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confident_voice/providers/theme_provider.dart';
 import 'package:confident_voice/views/screens/auth/forgot_password.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class Security extends StatelessWidget {
   const Security({super.key});
@@ -102,9 +103,8 @@ class Security extends StatelessWidget {
                 // Implement password change logic here
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password changed successfully'),
-                    backgroundColor: Color(0xFFA26DC5),
+                  StyledSnackBar.show(
+                    message: 'Password changed successfully!',
                   ),
                 );
               },

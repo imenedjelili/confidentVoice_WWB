@@ -176,8 +176,9 @@ class MyApp extends StatelessWidget {
             home: const SplashScreen(),
             routes: {
               '/home': (context) => const HomePage(
-                  userName: 'Guest User',
-                  profilePictureUrl: 'assets/images/image_placeholder.png'),
+                    userName: 'Guest User',
+                    profilePictureUrl: 'assets/images/image_placeholder.png', userEmail: '',
+                  ),
               '/Timer': (context) => const TimerPage(),
               '/RecordingPlayer': (context) => const RecordingPlayerPage(),
               '/settings': (context) => const Settings(),

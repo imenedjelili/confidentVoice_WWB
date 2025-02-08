@@ -39,7 +39,7 @@ class _ScriptsState extends State<Scripts> {
 
         setState(() {
           scripts = querySnapshot.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
+              .map((doc) => doc.data())
               .toList();
           isLoading = false;
         });

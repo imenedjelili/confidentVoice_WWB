@@ -18,18 +18,18 @@ class _GoogleSignInPageState extends State<GoogleSignInPage> {
     setState(() => isSigningIn = true);
 
     try {
-      // Step 0: Clear any cached account to force account selection
+      // Clear any cached account to force account selection
       await GoogleSignIn().signOut();
 
-      // Step 1: Trigger Google Sign-In
+      // Trigger Google Sign-In
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        print("Google Sign-In canceled");
+        // User canceled the sign-in flow.
         setState(() => isSigningIn = false);
         return;
       }
 
-      // Step 2: Get Google Authentication Credentials
+      // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
@@ -37,37 +37,32 @@ class _GoogleSignInPageState extends State<GoogleSignInPage> {
         idToken: googleAuth.idToken,
       );
 
-      // Step 3: Sign in to Firebase with Google Credentials
+      // Sign in to Firebase with the Google credentials
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
       final User? user = userCredential.user;
 
       if (user != null) {
-        print("Signed in as: ${user.email}");
-
-        // Step 4: Fetch or Create User in Firestore
+        // Fetch or create user document in Firestore
         final DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
 
         if (!userDoc.exists) {
-          // Step 5: Save User Details in Firestore
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
               .set({
             'uid': user.uid,
-            'name': user.displayName ?? '', // Use Google account name
-            'email': user.email, // Use Google account email
-            'profile_picture': user.photoURL ?? '', // Use Google account photo
+            'name': user.displayName ?? '',
+            'email': user.email,
+            'profile_picture': user.photoURL ?? '',
             'created_at': FieldValue.serverTimestamp(),
           });
-          print("User added to Firestore");
         }
 
-        // Step 6: Navigate to Birthday Page
-        print("Navigating to Birthday page...");
+        // Navigate to the Birthday page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -87,76 +82,95 @@ class _GoogleSignInPageState extends State<GoogleSignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // Extend the body behind the app bar for a full-screen effect.
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF412963),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      body: Container(
+        decoration: const BoxDecoration(
+          // A friendly gradient background.
+          gradient: LinearGradient(
+            colors: [Color(0xFF412963), Color(0xFF6D4C91)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Image(
-                  image: AssetImage('assets/images/logo.png'),
-                  height: 150, // Adjust height for your app's logo
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 40),
-                const Text(
-                  "Welcome to Confident Voice",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 30.0, vertical: 40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // App logo
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 120,
+                    fit: BoxFit.contain,
                   ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Sign in to continue and unlock powerful public speaking tools.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                if (isSigningIn)
-                  const CircularProgressIndicator()
-                else
-                  ElevatedButton.icon(
-                    onPressed: signInWithGoogle,
-                    icon: const Icon(
-                      Icons.account_circle,
+                  const SizedBox(height: 40),
+                  // Welcome text
+                  const Text(
+                    "Welcome to Confident Voice",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    label: const Text(
-                      "Sign in with Google",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDB4437), // Google Red
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      textStyle: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Sign in to continue and unlock powerful public speaking tools.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
                     ),
                   ),
-                const SizedBox(height: 20),
-                const Text(
-                  "By signing in, you agree to our Terms of Service and Privacy Policy.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  // Sign in button or progress indicator
+                  isSigningIn
+                      ? const CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: signInWithGoogle,
+                          icon: const Icon(
+                            Icons.account_circle,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Sign in with Google",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white, backgroundColor: const Color(0xFFDB4437),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 5,
+                            textStyle: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "By signing in, you agree to our Terms of Service and Privacy Policy.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.white70),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

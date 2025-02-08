@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:confident_voice/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 
 class PersonalInformation extends StatefulWidget {
   const PersonalInformation({super.key});
@@ -156,8 +157,9 @@ class _PersonalInformationState extends State<PersonalInformation> {
                     if (_formKey.currentState!.validate()) {
                       // Save changes logic goes here.
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Changes saved successfully')),
+                        StyledSnackBar.show(
+                          message: 'Profile updated successfully!',
+                        ),
                       );
                     }
                   },

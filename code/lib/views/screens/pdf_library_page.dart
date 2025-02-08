@@ -55,7 +55,7 @@ Future<void> _fetchPdfs() async {
               category: selectedCategory ?? 'General',
               uploadedBy: 'Unknown',
               uploadedAt:
-                  DateTime.tryParse(file.updatedAt ?? '') ?? DateTime.now(),
+                  DateTime.tryParse(file.updatedAt ?? '') ?? DateTime.now(), uploaderName: '', type: '',
             );
           } catch (e) {
             // Catch errors from getPublicUrl

@@ -54,7 +54,6 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
 //     }
 //   }
 
-
   Future<void> _onRemoveRecording(
       RemoveRecordingEvent event, Emitter<RecordingsState> emit) async {
     if (state is RecordingsLoaded) {

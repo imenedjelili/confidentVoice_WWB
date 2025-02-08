@@ -14,9 +14,30 @@ class OneExercise extends StatefulWidget {
   _OneExerciseState createState() => _OneExerciseState();
 }
 
-class _OneExerciseState extends State<OneExercise> {
+class _OneExerciseState extends State<OneExercise>
+    with SingleTickerProviderStateMixin {
   int currentStep = 0;
   bool isStepCompleted = false;
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void nextStep() {
     if (currentStep < widget.exerciseSteps.length - 1) {
@@ -24,6 +45,7 @@ class _OneExerciseState extends State<OneExercise> {
         currentStep++;
         isStepCompleted = false;
       });
+      _controller.forward(from: 0);
     }
   }
 
@@ -33,6 +55,7 @@ class _OneExerciseState extends State<OneExercise> {
         currentStep--;
         isStepCompleted = false;
       });
+      _controller.forward(from: 0);
     }
   }
 
@@ -46,8 +69,20 @@ class _OneExerciseState extends State<OneExercise> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("One Exercise"),
-        backgroundColor: Colors.purple,
+        title: const Text(
+          "Exercise Steps",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.deepPurple,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -55,34 +90,65 @@ class _OneExerciseState extends State<OneExercise> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Display the exercise image with rounded corners and shadow
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+              // Exercise Image with Animation
+              AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 1 + _animation.value * 0.05,
+                    child: child,
+                  );
+                },
+                child: Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.deepPurple.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      widget.imagePath,
+                      fit: BoxFit.cover,
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    widget.imagePath,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              // Display the current exercise step inside a Card
+              const SizedBox(height: 24),
+
+              // Progress Bar
+              LinearProgressIndicator(
+                value: (currentStep + 1) / widget.exerciseSteps.length,
+                backgroundColor: Colors.grey[300],
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                minHeight: 8,
+              ),
+              const SizedBox(height: 16),
+
+              // Step Indicator
+              Text(
+                "Step ${currentStep + 1} of ${widget.exerciseSteps.length}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Current Step Card
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -91,50 +157,88 @@ class _OneExerciseState extends State<OneExercise> {
                       Text(
                         widget.exerciseSteps[currentStep],
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
                       if (isStepCompleted)
-                        const Icon(Icons.check_circle,
-                            color: Colors.green, size: 40),
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 40,
+                        ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              // Navigation buttons for previous, complete/undo, and next steps
+              const SizedBox(height: 24),
+
+              // Navigation Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Previous Button
                   ElevatedButton(
                     onPressed: previousStep,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
+                      backgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: const Text("Previous"),
+                    child: const Text(
+                      "Previous",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
+
+                  // Complete/Undo Button
                   ElevatedButton(
                     onPressed: toggleCompletion,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: isStepCompleted
+                          ? Colors.deepPurple.withOpacity(0.8)
+                          : Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text(isStepCompleted ? "Undo" : "Complete"),
+                    child: Text(
+                      isStepCompleted ? "Undo" : "Complete",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
+
+                  // Next Button
                   ElevatedButton(
                     onPressed: nextStep,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
+                      backgroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: const Text("Next"),
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),

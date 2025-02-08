@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:confident_voice/databases/db_confidentVoice.dart';
-import 'package:confident_voice/databases/dbhelper.dart';
 import 'package:confident_voice/views/screens/homepage.dart';
+import 'package:confident_voice/widgets/styled_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfilePicture extends StatefulWidget {
   final String email;
+
   const ProfilePicture({super.key, required this.email});
 
   @override
@@ -25,19 +25,28 @@ class _ProfilePictureState extends State<ProfilePicture> {
     _fetchUserData();
   }
 
+  // Fetch the user data from Firestore based on the email provided.
   Future<void> _fetchUserData() async {
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      final QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('users')
-          .doc(widget.email)
+          .where('email', isEqualTo: widget.email)
           .get();
 
-      if (userDoc.exists) {
-        setState(() {
-          _name = userDoc['fullName'] ?? 'No Name';
-          _birthday = userDoc['dateOfBirth'] ?? 'No Birthday';
-          _gender = userDoc['gender'] ?? 'No Gender';
-        });
+      if (userQuery.docs.isNotEmpty) {
+        final userDoc = userQuery.docs.first;
+        final data = userDoc.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          setState(() {
+            // Check for both 'name' and 'fullName' fields.
+            _name = data['name'] ?? data['fullName'] ?? 'No Name';
+            _birthday = data['dateOfBirth'] ?? 'No Birthday';
+            _gender = data['gender'] ?? 'No Gender';
+          });
+        } else {
+          _showSnackBar("User document is empty or invalid");
+        }
       } else {
         _showSnackBar("User data not found in Firestore");
       }
@@ -46,11 +55,13 @@ class _ProfilePictureState extends State<ProfilePicture> {
     }
   }
 
+  // Utility method to show SnackBar messages.
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+        .showSnackBar(StyledSnackBar.show(message: message, isError: !message.contains('successfully')));
   }
 
+  // Pick an image from the gallery.
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -60,9 +71,10 @@ class _ProfilePictureState extends State<ProfilePicture> {
     }
   }
 
-  Future<void> _saveProfilePicture({bool skipImage = false}) async {
-    if (!skipImage && _profilePicture == null) {
-      _showSnackBar("Please select a profile picture or skip this step");
+  // Save the chosen profile picture to Firestore and navigate to HomePage.
+  Future<void> _saveProfilePicture() async {
+    if (_profilePicture == null) {
+      _showSnackBar("Please select a profile picture");
       return;
     }
 
@@ -72,53 +84,80 @@ class _ProfilePictureState extends State<ProfilePicture> {
     }
 
     try {
-      String imageUrl = skipImage 
-          ? 'assets/images/image_placeholder.png'  // Default image when skipped
-          : _profilePicture!.path;
+      String imageUrl = _profilePicture!.path;
 
-      await FirebaseFirestore.instance
+      // Find the user document and update the profile picture.
+      final QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('users')
-          .doc(widget.email)
-          .update({'profile_picture': imageUrl});
+          .where('email', isEqualTo: widget.email)
+          .get();
 
-      bool tableExists = await DBHelper.doesTableExist('User');
-      if (!tableExists) {
-        _showSnackBar("User table does not exist in the database");
-        return;
-      }
+      if (userQuery.docs.isNotEmpty) {
+        final userDoc = userQuery.docs.first;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userDoc.id)
+            .update({'profile_picture': imageUrl});
 
-      await UserDB.insertUser({
-        'username': _name!,
-        'email': widget.email,
-        'password': '',
-        'birthday': _birthday!,
-        'image': imageUrl,
-      });
+        _showSnackBar("Profile picture updated successfully!");
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(
-            userName: _name!,
-            profilePictureUrl: imageUrl,
+        // Navigate to the HomePage, passing the user name and image URL.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              userName: _name!,
+                profilePictureUrl: imageUrl, userEmail: widget.email,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        _showSnackBar("User not found in Firestore");
+      }
     } catch (e) {
       _showSnackBar("Error saving profile picture: $e");
     }
   }
 
-  void _skipToHome() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomePage(
-          userName: _name ?? 'Guest User',
-          profilePictureUrl: 'assets/images/image_placeholder.png',
-        ),
-      ),
-    );
+  // Skip selecting a profile picture. Use a default placeholder image and update Firestore.
+  Future<void> _skipAndGoToHome() async {
+    const String defaultImage = 'assets/images/image_placeholder.png';
+
+    if (_name == null || _birthday == null || _gender == null) {
+      _showSnackBar("User data is incomplete");
+      return;
+    }
+
+    try {
+      final QuerySnapshot userQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: widget.email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        final userDoc = userQuery.docs.first;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userDoc.id)
+            .update({'profile_picture': defaultImage});
+
+        _showSnackBar("Profile picture updated successfully!");
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              userName: _name!,
+                profilePictureUrl: defaultImage, userEmail: widget.email,
+            ),
+          ),
+        );
+      } else {
+        _showSnackBar("User not found in Firestore");
+      }
+    } catch (e) {
+      _showSnackBar("Error skipping profile picture: $e");
+    }
   }
 
   @override
@@ -138,6 +177,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              // Illustration image at the top.
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 30.0),
                 child: Image.asset(
@@ -161,6 +201,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 10),
+              // The CircleAvatar shows the selected image or an add icon.
               GestureDetector(
                 onTap: _pickImage,
                 child: CircleAvatar(
@@ -176,39 +217,37 @@ class _ProfilePictureState extends State<ProfilePicture> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Save button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                child: Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _saveProfilePicture(skipImage: false),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF412963),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          "Save & Go to Home",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
+                child: ElevatedButton(
+                  onPressed: _saveProfilePicture,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF412963),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _skipToHome,
-                      child: const Text(
-                        "Skip for now",
-                        style: TextStyle(
-                          color: Color(0xFF412963),
-                          fontSize: 16,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "Save & Go to Home",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
-                  ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Skip button to allow the user to bypass this step.
+              TextButton(
+                onPressed: _skipAndGoToHome,
+                child: const Text(
+                  "Skip for now",
+                  style: TextStyle(
+                    color: Color(0xFF412963),
+                    fontSize: 16,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ],
