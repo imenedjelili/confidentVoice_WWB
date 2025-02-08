@@ -22,12 +22,11 @@ class _PdfLibraryPageState extends State<PdfLibraryPage> {
     _fetchPdfs();
   }
 
-  Future<void> _fetchPdfs() async {
+Future<void> _fetchPdfs() async {
     try {
       setState(() => _isLoading = true);
 
-      final response = await Supabase.instance.client
-          .storage
+      final response = await Supabase.instance.client.storage
           .from('documents')
           .list(path: 'pdfs');
 
@@ -36,27 +35,33 @@ class _PdfLibraryPageState extends State<PdfLibraryPage> {
       }
 
       final files = response.data ?? [];
-      final pdfFiles = files.where((file) => file.name.toLowerCase().endsWith('.pdf')).toList();
+      final pdfFiles = files
+          .where((file) => file.name.toLowerCase().endsWith('.pdf'))
+          .toList();
 
       final pdfs = await Future.wait(
         pdfFiles.map((file) async {
-          final urlResponse = Supabase.instance.client
-              .storage
-              .from('documents')
-              .getPublicUrl('pdfs/${file.name}');
+          try {
+            // Inner try-catch for getPublicUrl
+            final urlResponse = Supabase.instance.client.storage
+                .from('documents')
+                .getPublicUrl('pdfs/${file.name}');
 
-          if (urlResponse.error != null) {
-            throw Exception('Error getting URL for ${file.name}: ${urlResponse.error!.message}');
+            return Slide(
+              id: file.id ?? '',
+              title: file.name.split('.').first,
+              url: urlResponse.data ??
+                  '', // urlResponse is already the URL string
+              category: selectedCategory ?? 'General',
+              uploadedBy: 'Unknown',
+              uploadedAt:
+                  DateTime.tryParse(file.updatedAt ?? '') ?? DateTime.now(),
+            );
+          } catch (e) {
+            // Catch errors from getPublicUrl
+            throw Exception(
+                'Error getting URL for ${file.name}: $e'); // Re-throw the exception
           }
-
-          return Slide(
-            id: file.id ?? '',
-            title: file.name.split('.').first,
-            url: urlResponse.data ?? '',
-            category: selectedCategory ?? 'General',
-            uploadedBy: 'Unknown',
-            uploadedAt: DateTime.tryParse(file.updatedAt ?? '') ?? DateTime.now(),
-          );
         }),
       );
 
@@ -65,6 +70,7 @@ class _PdfLibraryPageState extends State<PdfLibraryPage> {
         _isLoading = false;
       });
     } catch (e) {
+      // Outer try-catch handles all exceptions
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading PDFs: $e')),

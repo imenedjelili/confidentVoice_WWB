@@ -4,15 +4,17 @@ import 'package:confident_voice/models/States/recordings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 class RecordingsPage extends StatelessWidget {
   static const String recording = '/Recording';
-  const RecordingsPage({super.key});
+  final String userId;
+
+  const RecordingsPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => RecordingsBloc()..add(FetchRecordingsEvent()),
+      create: (_) =>
+          RecordingsBloc(userId: userId)..add(FetchRecordingsEvent()),
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -21,7 +23,6 @@ class RecordingsPage extends StatelessWidget {
               color: Colors.purple,
               fontWeight: FontWeight.bold,
               fontSize: 27,
-
             ),
           ),
           centerTitle: true,

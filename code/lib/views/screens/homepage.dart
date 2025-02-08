@@ -294,14 +294,24 @@ class _HomeContentState extends State<_HomeContent> {
                         itemCount: state.categories.length,
                         itemBuilder: (context, index) {
                           return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      state.categories[index]['page'],
-                                ),
-                              );
+                            onTap: () async {
+                              var pageFunction =
+                                  state.categories[index]['page'];
+                              if (pageFunction is Future Function(
+                                  BuildContext)) {
+                                Widget page = await pageFunction(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => page),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          state.categories[index]['page']),
+                                );
+                              }
                             },
                             child: Column(
                               children: [

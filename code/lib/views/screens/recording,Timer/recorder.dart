@@ -14,7 +14,7 @@ import 'package:confident_voice/models/classes/RecordedData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RecorderPage extends StatefulWidget {
-  const RecorderPage({super.key});
+  const RecorderPage({super.key, required recorderController});
   static const String recorder = '/Recorder';
 
   @override
@@ -27,6 +27,19 @@ class _RecorderPageState extends State<RecorderPage> {
   String? audioPath;
   Timer? timer;
   int elapsedTime = 0;
+  late String userid;
+
+  @override
+  void initState() {
+    super.initState();
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      userid = user.uid;
+      print("User ID initialized: $userid");
+    } else {
+      print("User not logged in.");
+    }
+  }
 
   Future<void> startRecording(BuildContext context) async {
     await record.stop();
@@ -76,10 +89,9 @@ class _RecorderPageState extends State<RecorderPage> {
       print("Recording saved at $audioPath");
 
       try {
-        User? user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
+        if (userid.isNotEmpty) {
           final recording = RecordedData(
-            userId: user.uid,
+            userId: userid,
             recordingPath: audioPath!,
             createdAt: DateTime.now().toIso8601String(),
           );
@@ -89,7 +101,7 @@ class _RecorderPageState extends State<RecorderPage> {
           print("Recording path stored in the database.");
         } else {
           print("User not logged in. Cannot save recording.");
-         
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('User not logged in. Please log in to save.')),
@@ -193,14 +205,23 @@ class _RecorderPageState extends State<RecorderPage> {
                           icon: const Icon(Icons.check),
                           color: Colors.green,
                           onPressed: () {
-                            stopRecording(
-                                context); // Call stopRecording before navigating
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RecordingsPage(),
-                              ),
-                            );
+                            stopRecording(context);
+                            if (userid.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      RecordingsPage(userId: userid),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'User not logged in. Cannot view recordings.'),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),

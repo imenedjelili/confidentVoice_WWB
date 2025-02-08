@@ -7,19 +7,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confident_voice/databases/db_confidentVoice.dart';
 
 class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
-  RecordingsBloc() : super(RecordingsInitial()) {
+      String userId;
+  RecordingsBloc({required this.userId}) : super(RecordingsInitial()) {
     on<FetchRecordingsEvent>(_onFetchRecordings);
     on<RemoveRecordingEvent>(_onRemoveRecording);
   }
+
+
   Future<void> _onFetchRecordings(
       FetchRecordingsEvent event, Emitter<RecordingsState> emit) async {
     emit(RecordingsLoading());
     try {
-      final userId = await _getUserId();
-
       if (userId != null) {
-        final recordingsFromDb =
-            await RecordedDataDB.getRecordings(userId); 
+        final recordingsFromDb = await RecordedDataDB.getRecordings(userId);
+        print("userid  ${userId}");
+        print(recordingsFromDb);
         List<RecordedData> recordings = recordingsFromDb.map((map) {
           return RecordedData.fromMap(map);
         }).toList();
@@ -27,7 +29,7 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
         emit(RecordingsLoaded(recordings));
       } else {
         emit(RecordingsError(
-            'User ID not found.')); // Handle the case where userId is null
+            'User ID not found ${userId}.')); // Handle the case where userId is null
       }
     } catch (e) {
       emit(RecordingsError(
@@ -35,30 +37,23 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
     }
   }
 
-// 2. Implement the _getUserId() function:
-  Future<int?> _getUserId() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-        final userId =
-            userDoc.get('userId'); 
-        if (userId is int) {
+  // 2. Implement the _getUserId() function:
+//   Future<String?> _getUserId() async {
+//     try {
+//      User? user = FirebaseAuth.instance.currentUser;
+//      print(user?.uid);
+// ;      if (user != null) {
+//         print(user.uid);
+//         return user.uid;
+        
+//       }
+//       return null;
+//     } catch (e) {
+//       print("Error getting user ID: $e");
+//       return null;
+//     }
+//   }
 
-          return userId;
-        } else if (userId is String) {
-          return int.tryParse(userId) ?? null;
-        }
-      }
-      return null; 
-    } catch (e) {
-      print("Error getting user ID: $e");
-      return null; 
-    }
-  }
 
   Future<void> _onRemoveRecording(
       RemoveRecordingEvent event, Emitter<RecordingsState> emit) async {
@@ -77,3 +72,5 @@ class RecordingsBloc extends Bloc<RecordingsEvent, RecordingsState> {
     }
   }
 }
+
+

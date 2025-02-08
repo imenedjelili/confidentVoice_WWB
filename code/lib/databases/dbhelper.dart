@@ -21,7 +21,7 @@ class DBHelper {
         // Create User table
         await db.execute('''
         CREATE TABLE User (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT PRIMARY KEY,
           username TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
           password TEXT NOT NULL,
@@ -97,11 +97,10 @@ class DBHelper {
         await db.execute('''
           CREATE TABLE recording (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
+            user_id TEXT,
             recording_path TEXT NOT NULL,
-            created_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES User(id)
-          );
+            created_at TEXT
+            )
         ''');
 
         await db.execute('''

@@ -1,4 +1,8 @@
 // lib/Controllers/home_bloc.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:confident_voice/views/screens/ProVersion/premiumPage.dart';
+import 'package:confident_voice/views/screens/speech_to_text.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/Events/home_event.dart';
 import '../models/States/home_state.dart';
@@ -23,7 +27,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     ];
 
     final categories = [
-      {"title": "Recording", "icon": Icons.mic, "page": const RecorderPage()},
+      {"title": "Recording", "icon": Icons.mic, "page": const RecorderPage(recorderController: null,)},
       {
         "title": "Teleprompter",
         "icon": Icons.view_compact,
@@ -45,6 +49,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         "page": const TimerConfigurationPage()
       },
       {"title": "Saving", "icon": Icons.save, "page": const SavingPage()},
+      {
+        "title": "Voice to Text",
+        "icon": Icons.text_fields,
+        "page": (BuildContext context) async {
+          bool isPremium = await isUserPremium();
+          return isPremium ? VoiceToTextScreen() : PremiumScreen();
+        }
+      }
+
     ];
 
     emit(state.copyWith(
@@ -60,6 +73,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(currentQuote: quotes.first));
   }
 }
+
+Future<bool> isUserPremium() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+    bool isPremium = data?['isPremium'] ?? false;
+    return isPremium;
+  }
+  return false;
+}
+
 
 class SavingPage extends StatelessWidget {
   const SavingPage({super.key});

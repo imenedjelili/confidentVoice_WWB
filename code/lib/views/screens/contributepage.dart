@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ContributePage extends StatelessWidget {
@@ -42,9 +45,11 @@ class _ContributeViewState extends State<_ContributeView> {
 
   Future<void> _pickFile() async {
     try {
+      // Adding withData: true ensures that file bytes are available on mobile devices.
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: _selectedType == 'PDF' ? ['pdf'] : ['ppt', 'pptx'],
+        withData: true,
       );
 
       if (result != null) {
@@ -110,52 +115,53 @@ class _ContributeViewState extends State<_ContributeView> {
     });
 
     try {
-      // Get file bytes
-      final bytes = _selectedFile!.bytes;
+      // Get file bytes from the picked file.
+      Uint8List? bytes = _selectedFile!.bytes;
+      // Fallback: if bytes is null, try reading from the file path.
+      if (bytes == null && _selectedFile!.path != null) {
+        bytes = await File(_selectedFile!.path!).readAsBytes();
+      }
       if (bytes == null) {
         throw Exception('No file data available');
       }
 
-      // Generate a unique filename
+      // Generate a unique filename.
       final fileExtension = _selectedFile!.extension?.toLowerCase() ?? '';
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '$timestamp-${_selectedFile!.name}';
-      final folderPath = _selectedType.toLowerCase(); // 'pdf' or 'slides'
+      final folderPath = _selectedType.toLowerCase(); // e.g., 'pdf' or 'slides'
 
-      // Upload to Supabase storage
-      final storageResponse = await Supabase.instance.client
-          .storage
-          .from('documents')
-          .uploadBinary(
-            '$folderPath/$fileName',
-            bytes,
-            fileOptions: const FileOptions(
-              upsert: true,
-            ),
-          );
+      // Upload to Supabase storage.
+      final storageResponse =
+          await Supabase.instance.client.storage.from('documents').uploadBinary(
+                '$folderPath/$fileName',
+                bytes,
+                fileOptions: const FileOptions(
+                  upsert: true,
+                ),
+              );
 
       if (storageResponse.error != null) {
         throw Exception(storageResponse.error!.message);
       }
 
-      // Get the public URL as a string
-      final fileUrl = Supabase.instance.client
-          .storage
+      // Get the public URL as a string.
+      final fileUrl = Supabase.instance.client.storage
           .from('documents')
           .getPublicUrl('$folderPath/$fileName');
 
-      // Store metadata in Firestore
+      // Store metadata in Firestore.
       await FirebaseFirestore.instance.collection('documents').add({
         'name': _selectedFile!.name,
         'type': _selectedType,
         'writer': _writerController.text.trim(),
         'category': _categoryController.text.trim(),
-        'url': fileUrl.toString(), // Convert URL to string
+        'url': fileUrl.toString(),
         'userId': user.uid,
         'created_at': FieldValue.serverTimestamp(),
         'size': _selectedFile!.size,
         'extension': fileExtension,
-        'path': '$folderPath/$fileName', // Store the storage path
+        'path': '$folderPath/$fileName',
       });
 
       if (context.mounted) {
@@ -165,8 +171,8 @@ class _ContributeViewState extends State<_ContributeView> {
             backgroundColor: Colors.green,
           ),
         );
-        
-        // Clear the form
+
+        // Clear the form.
         _writerController.clear();
         _categoryController.clear();
         setState(() {
@@ -193,7 +199,7 @@ class _ContributeViewState extends State<_ContributeView> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    // Get current Firebase user
+    // Get current Firebase user.
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -228,7 +234,7 @@ class _ContributeViewState extends State<_ContributeView> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        // Navigate to your existing sign-in page
+                        // Navigate to your existing sign-in page.
                         Navigator.pushNamed(context, '/signin');
                       },
                       style: ElevatedButton.styleFrom(
@@ -333,8 +339,8 @@ class _ContributeViewState extends State<_ContributeView> {
                         child: Column(
                           children: [
                             Icon(
-                              _selectedType == 'Slides' 
-                                  ? Icons.slideshow 
+                              _selectedType == 'Slides'
+                                  ? Icons.slideshow
                                   : Icons.picture_as_pdf,
                               size: 48,
                               color: Theme.of(context).primaryColor,
@@ -353,12 +359,14 @@ class _ContributeViewState extends State<_ContributeView> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.check_circle, color: Colors.green),
+                                    const Icon(Icons.check_circle,
+                                        color: Colors.green),
                                     const SizedBox(width: 8),
                                     Flexible(
                                       child: Text(
                                         _selectedFileName!,
-                                        style: const TextStyle(color: Colors.green),
+                                        style: const TextStyle(
+                                            color: Colors.green),
                                       ),
                                     ),
                                   ],
@@ -388,8 +396,8 @@ class _ContributeViewState extends State<_ContributeView> {
                             ElevatedButton.icon(
                               onPressed: _pickFile,
                               icon: const Icon(Icons.upload_file),
-                              label: Text(_selectedFileName == null 
-                                  ? 'Choose File' 
+                              label: Text(_selectedFileName == null
+                                  ? 'Choose File'
                                   : 'Choose Different File'),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
@@ -420,17 +428,17 @@ class _ContributeViewState extends State<_ContributeView> {
       onTap: () {
         setState(() {
           _selectedType = type;
-          _selectedFileName = null; // Reset file selection when type changes
+          _selectedFileName = null; // Reset file selection when type changes.
         });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+          color: isSelected
+              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              : null,
           border: Border.all(
-            color: isSelected 
-                ? Theme.of(context).primaryColor 
-                : Colors.grey,
+            color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
             width: 2,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -439,18 +447,15 @@ class _ContributeViewState extends State<_ContributeView> {
           children: [
             Icon(
               icon,
-              color: isSelected 
-                  ? Theme.of(context).primaryColor 
-                  : Colors.grey,
+              color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
               type,
               style: TextStyle(
-                color: isSelected 
-                    ? Theme.of(context).primaryColor 
-                    : Colors.grey,
+                color:
+                    isSelected ? Theme.of(context).primaryColor : Colors.grey,
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -124,22 +124,22 @@ class ExercisesDB {
 }
 
 class RecordedDataDB {
-  static Future<List<Map<String, dynamic>>> getRecordings(int userId) async {
+  static Future<List<Map<String, dynamic>>> getRecordings(String userId) async {
     final database = await DBHelper.getDatabase();
     return database.rawQuery(
-        '''SELECT recording_path FROM RecordedData WHERE user_id = ?''',
+        '''SELECT recording_path FROM recording WHERE user_id = ?''',
         [userId]);
   }
 
   static Future<int> insertRecording(Map<String, dynamic> data) async {
     final database = await DBHelper.getDatabase();
-    return await database.insert("RecordedData", data);
+    return await database.insert("recording", data);
   }
 
   static Future<int> removeRecording(int id) async {
     final database = await DBHelper.getDatabase();
     return await database
-        .delete("RecordedData", where: "id = ?", whereArgs: [id]);
+        .delete("recording", where: "id = ?", whereArgs: [id]);
   }
 }
 
