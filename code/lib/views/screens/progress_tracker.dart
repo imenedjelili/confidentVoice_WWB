@@ -217,7 +217,7 @@ class _ProgressTrackerScreenState extends State<ProgressTrackerScreen> {
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
-                    //tooltipBgColor: const Color(0xFF6B4E9D),
+                    tooltipBgColor: const Color(0xFF6B4E9D),
                     tooltipRoundedRadius: 8,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
@@ -259,10 +259,10 @@ class _ProgressTrackerScreenState extends State<ProgressTrackerScreen> {
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(
+                  topTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
-                  rightTitles: const AxisTitles(
+                  rightTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
